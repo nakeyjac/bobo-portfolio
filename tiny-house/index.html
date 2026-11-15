@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>小小小世界 · Tiny Tiny World</title><style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--ink:#3a1b12;--wood:#5b2e1e;--wood2:#3a1b12;--parch:#f3e2bc;--parch2:#ead3a0;--line:#c9a66e;--red:#bd151a;--wine:#7f171d;--turq:#3f9aaa;--olive:#6b7230;--mustard:#e0b54a;--soft:#8a6a4a;--serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,"Songti SC","Noto Serif CJK SC","Noto Serif SC","STSong","Source Han Serif SC",serif}
 html,body{margin:0;height:100%;overflow:hidden;font-family:var(--serif);color:var(--ink);user-select:none;-webkit-user-select:none}
@@ -149,6 +149,71 @@ body.bleak canvas#gl{filter:saturate(.1) contrast(.85) brightness(.6) hue-rotate
 #bstcard .fgt{font-size:13px;line-height:1.45;margin-bottom:8px;color:#4a2a22}
 #bstcard .fgb{display:flex;gap:6px;flex-wrap:wrap}#bstcard .fgb button{flex:1;min-width:110px;border:2px solid #4a2a22;border-radius:10px;background:#f6e9c4;padding:6px 8px;font:inherit;font-size:12px;cursor:pointer;color:#4a2a22}
 #bstcard .fgb button:first-child{background:#e8b650}
+/* ===== v4.2.1 (D): phones — compact UI. Desktop is untouched (all rules live inside these media queries). ===== */
+@media (max-width:600px){
+ :root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px)}
+ #brand{display:none}
+ .panel{border-radius:8px;box-shadow:0 0 0 1.5px var(--wood),0 0 0 3px #c9a66e,0 4px 10px rgba(58,27,18,.3)}
+ .side{top:calc(6px + var(--sat));width:calc(50% - 9px - var(--sal));gap:4px}
+ #L{left:calc(6px + var(--sal));right:auto;flex-direction:column;flex-wrap:nowrap;align-items:stretch}
+ #R{left:auto;right:calc(6px + var(--sar));top:calc(6px + var(--sat));bottom:auto;flex-direction:column;gap:4px;width:calc(50% - 9px - var(--sar))}
+ #name{padding:4px 8px;gap:7px;min-height:36px;position:relative}#name .av{width:28px;height:28px;font-size:16px}#name b{font-size:13px;letter-spacing:.5px}#name small{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #emochip{font-size:10px;padding:0 5px;margin-left:3px}
+ #barsT{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:#e6cf9a;border-radius:6px;width:26px;height:26px;font-size:13px;line-height:1;color:var(--wood);cursor:pointer;padding:0}
+ #bars{display:none;position:fixed;left:calc(6px + var(--sal));right:calc(6px + var(--sar));top:calc(50px + var(--sat));z-index:9;padding:8px 10px;flex-direction:row;flex-wrap:wrap;gap:5px 10px}
+ #L.bo #bars{display:flex}#bars .bar{flex:1 1 40%}.bar label{font-size:11px;margin-bottom:1px}.bar .tr{height:8px}
+ #aff{flex:1 1 100%}#hearts{font-size:13px}
+ #chip{padding:4px 6px;flex:none}#seaR{gap:6px;justify-content:flex-start}#seaI{font-size:20px}#seaR b{font-size:12px;white-space:nowrap}#seaR small{font-size:9.5px}
+ #tmpR{margin:3px 0 0;gap:3px}#tmpR div{padding:1px 0;border-radius:5px}#tmpR small{display:none}#tmpR b{font-size:11.5px}#comfT{display:none}
+ #btns{padding:2px;gap:1px;grid-template-columns:repeat(6,1fr)}#btns button{padding:2px 0;min-height:34px;justify-content:center}#btns button span{font-size:17px}#btns u{display:none}
+ .badge{min-width:13px;height:13px;line-height:13px;font-size:9px;padding:0 3px}
+ #zones{position:fixed;top:auto;bottom:calc(52px + var(--sab));left:calc(6px + var(--sal));right:calc(6px + var(--sar));transform:none;flex-direction:row;gap:1px;padding:2px 3px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:8px}
+ #zones::-webkit-scrollbar{display:none}
+ #zones button{flex:none;flex-direction:column;gap:0;padding:2px 7px;min-width:38px;min-height:36px;justify-content:center}#zones button span{font-size:17px}#zones button u{display:none}
+ #tabs{left:calc(6px + var(--sal));right:calc(6px + var(--sar));transform:none;bottom:calc(6px + var(--sab));gap:0;padding:3px;justify-content:space-between}
+ .tab{flex:1 1 0;min-width:0;padding:3px 0;min-height:40px;justify-content:center;font-size:9.5px;border-radius:6px;white-space:nowrap;overflow:hidden}.tab span{font-size:17px;line-height:1.15}
+ #dock{bottom:calc(96px + var(--sab));left:calc(6px + var(--sal));right:calc(6px + var(--sar));width:auto;max-width:none;min-width:0;transform:translateY(20px);max-height:36vh;padding:8px 10px}
+ #dock.show{transform:none}
+ #dock h3{font-size:13px;margin-bottom:5px}#dock h3 small{font-size:10.5px}
+ .grid{grid-template-columns:repeat(4,1fr);gap:5px}.it{padding:5px 2px 4px;font-size:11px;min-height:48px}.it .ic{font-size:22px}.it em,.it small{font-size:9.5px}.it .ic .fimg{width:40px;height:40px;margin:-4px auto -3px}
+ .sub button,.mini{padding:6px 9px;font-size:11.5px;min-height:32px}.chips button{padding:6px 9px;font-size:11.5px;min-height:32px}
+ #log{height:min(14vh,100px);font-size:12.5px;padding:6px 8px;margin-bottom:6px}.m span{padding:4px 8px}
+ .row input{font-size:16px;padding:8px 10px;min-height:38px}.btn{padding:8px 14px;min-height:38px;font-size:13px}
+ .stats{grid-template-columns:repeat(3,1fr);gap:5px}.pcard{font-size:11.5px;padding:5px 7px}
+ #fgcard,#cmdcard,#bstcard{top:calc(96px + var(--sat));max-width:92vw;padding:8px 10px;font-size:12px}
+ #adoptAsk{bottom:calc(100px + var(--sab));max-width:94vw;padding:8px 10px;font-size:12.5px;gap:8px}.aa-e{font-size:32px}
+ #lifeAlert{top:calc(96px + var(--sat));max-width:94vw;font-size:12px;padding:5px 8px}
+ #calPanel{width:94vw;padding:8px;font-size:12px}
+ #thought{max-width:150px;font-size:11.5px;padding:5px 9px}
+ #cmdst{bottom:calc(92px + var(--sab));font-size:11.5px;max-width:92vw}
+ #modal #mc{max-width:calc(100vw - 16px)}
+}
+@media (max-height:500px) and (orientation:landscape){
+ :root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px)}
+ #brand{display:none}
+ .side{top:calc(4px + var(--sat));width:clamp(150px,22vw,190px);gap:4px}
+ #L{left:calc(6px + var(--sal));right:auto;flex-direction:column;flex-wrap:nowrap}
+ #R{left:auto;right:calc(6px + var(--sar));top:calc(4px + var(--sat));bottom:auto;flex-direction:column;gap:4px}
+ #name{padding:3px 8px;gap:6px;min-height:34px;position:relative}#name .av{width:26px;height:26px;font-size:14px}#name b{font-size:12.5px}#name small{font-size:9.5px}#emochip{font-size:9.5px;padding:0 4px}
+ #barsT{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:#e6cf9a;border-radius:6px;width:26px;height:26px;font-size:13px;color:var(--wood);cursor:pointer;padding:0}
+ #bars{display:none;padding:6px 8px;flex-direction:column;gap:3px}#L.bo #bars{display:flex}.bar label{font-size:10.5px;margin-bottom:0}.bar .tr{height:7px}#hearts{font-size:12px}
+ #chip{padding:3px 6px}#seaR{gap:6px}#seaI{font-size:18px}#seaR b{font-size:11.5px}#seaR small{font-size:9px}#tmpR{margin:2px 0 0}#tmpR small,#comfT{display:none}#tmpR b{font-size:11px}
+ #btns{padding:2px;grid-template-columns:repeat(6,1fr)}#btns button{padding:1px 0;min-height:34px}#btns button span{font-size:16px}#btns u{display:none}
+ #zones{position:fixed;top:auto;bottom:calc(44px + var(--sab));left:50%;transform:translateX(-50%);max-width:calc(100vw - 2*clamp(150px,22vw,190px) - 30px);flex-direction:row;overflow-x:auto;scrollbar-width:none;padding:2px 3px}
+ #zones::-webkit-scrollbar{display:none}#zones button{flex:none;padding:2px 6px;min-width:36px;min-height:34px;justify-content:center}#zones button span{font-size:16px}#zones button u{display:none}
+ #tabs{bottom:calc(4px + var(--sab));padding:2px;gap:1px}.tab{padding:2px 7px;min-height:36px;font-size:9.5px}.tab span{font-size:16px}
+ #dock{bottom:calc(86px + var(--sab));max-height:44vh;width:min(560px,calc(100vw - 2*clamp(150px,22vw,190px) - 30px));min-width:0;padding:6px 10px}
+ .grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:5px}.it{padding:4px 2px;font-size:11px;min-height:44px}.it .ic{font-size:20px}
+ .row input{font-size:16px;padding:6px 10px;min-height:36px}#log{height:60px}.btn{min-height:36px;padding:6px 14px}
+ #fgcard,#cmdcard,#bstcard{top:calc(8px + var(--sat))}#adoptAsk{bottom:calc(90px + var(--sab))}#lifeAlert{top:calc(8px + var(--sat))}#cmdst{bottom:calc(86px + var(--sab))}
+ #calPanel{max-height:94vh;font-size:12px}
+}
+#rainv{position:fixed;inset:0;pointer-events:none;z-index:3;width:100%;height:100%}
+#wxdim{position:fixed;inset:0;pointer-events:none;z-index:2;background:linear-gradient(180deg,#1d2740,#33405a);opacity:0;mix-blend-mode:multiply}
+/* v4.2.1 (D): toolbar buttons become a 3x2 grid of >=36px targets; the stat toggle gets a bigger invisible hit area */
+@media(max-width:900px),(max-aspect-ratio:1/1),(max-height:500px) and (orientation:landscape){
+ #btns{grid-template-columns:repeat(3,1fr);gap:2px}#btns button{min-width:36px;min-height:36px;justify-content:center}
+ #barsT::after{content:"";position:absolute;inset:-6px}}
 </style></head><body>
 <div id="bgnight"></div>
 <canvas id="gl"></canvas>
@@ -581,9 +646,10 @@ const sph=(r,ws,hs)=>new THREE.SphereGeometry(r,ws||20,hs||14);
 function sphere(g,r,m,x,y,z,s,o){o=o||{};if(s)o.s=s;return add(g,sph(r),m,x,y,z,o)}
 function cyl(g,rt,rb,h,m,x,y,z,o,seg){return add(g,new THREE.CylinderGeometry(rt,rb,h,seg||24),m,x,y,z,o)}
 /* canvas texture; unless raw, pixels are remapped through PAL */
-function tex(size,draw,rep,w,h,raw){const c=document.createElement('canvas');c.width=w||size;c.height=h||size;const x=c.getContext('2d');draw(x,c.width,c.height);
+const TEXQ=2; /* v4.2.1: canvas textures are drawn at 2x resolution (crisp when zoomed in) */
+function tex(size,draw,rep,w,h,raw){const c=document.createElement('canvas');const lw=w||size,lh=h||size;c.width=lw*TEXQ;c.height=lh*TEXQ;const x=c.getContext('2d');x.scale(TEXQ,TEXQ);draw(x,lw,lh);
  if(!raw){const im=x.getImageData(0,0,c.width,c.height),d=im.data,cache={};for(let i=0;i<d.length;i+=4){if(!d[i+3])continue;const k=d[i]<<16|d[i+1]<<8|d[i+2];let v=cache[k];if(v==null)v=cache[k]=PAL(k);d[i]=v>>16&255;d[i+1]=v>>8&255;d[i+2]=v&255}x.putImageData(im,0,0)}
- const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
+ const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=16;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
 function heartShape(s){const sh=new THREE.Shape();sh.moveTo(0,-.5*s);sh.bezierCurveTo(-.9*s,.1*s,-.45*s,.8*s,0,.35*s);sh.bezierCurveTo(.45*s,.8*s,.9*s,.1*s,0,-.5*s);return sh}
 const heartGeo=new THREE.ExtrudeGeometry(heartShape(1),{depth:.05,bevelEnabled:true,bevelSize:.04,bevelThickness:.04,bevelSegments:2,curveSegments:10});heartGeo.center();
 /* painterly speckle */
@@ -1823,14 +1889,15 @@ function updateCam(){
  if(cam.follow&&cam.mode!=='room'&&typeof PET!=='undefined'){cam.tx=lerp(cam.tx,PET.x,.07);cam.tz=lerp(cam.tz,PET.z,.07);cam.ty=lerp(cam.ty,(PET.fy||0)+.6,.07)}
  cam.tx=clamp(cam.tx,CAMB.x0,CAMB.x1);cam.tz=clamp(cam.tz,CAMB.z0,CAMB.z1);
  const kz=cam.k;const d=lerp(camBase()*cam.zoom,camRoomBase()*.8*cam.rz,kz);
- NCU.value=(kz<.25&&cam.zoom<.8)?d*.88:0;
+ NCU.value=(kz<.25&&cam.zoom<.8&&cam.zoom>.4)?d*.88:0; /* v4.2.1: no dither fade in close-ups (read as blur) */
+ {const ext=cam.zoom<.25?8:cam.zoom<.5?12:22;if(sun.userData.ext!==ext){sun.userData.ext=ext;Object.assign(sun.shadow.camera,{left:-ext,right:ext,top:ext,bottom:-ext});sun.shadow.camera.updateProjectionMatrix()}const pb=(cam.zoom<.5&&kz<.5)?1.5:0;if(window._prB!==pb&&(pb>(window._prB||0)||cam.zoom>.58||kz>.6)){window._prB=pb;resize()}}
  const tx=lerp(cam.tx,0,kz),ty=lerp(cam.ty,3.3+(PET.fy||0)*.1,kz),tz=lerp(cam.tz,.1,kz);
  camera.position.set(tx+d*Math.sin(cam.az)*Math.cos(cam.el),ty+d*Math.sin(cam.el),tz+d*Math.cos(cam.az)*Math.cos(cam.el));camera.lookAt(tx,ty,tz);
  if(typeof Room!=='undefined'&&Room.seaTop){const sub=camera.position.y<Room.seaY-.15&&cam.ty<Room.seaY+1;Room.seaTop.visible=!sub;Room.seaTop.material.opacity=cam.zoom<1.2?.5:.62;if(Room.seaBack)Room.seaBack.visible=sub}
  {const sx=Math.round(tx/2)*2,sz=Math.round(tz/2)*2;sun.target.position.set(sx,0,sz);sun.position.set(sx-9,16,sz+10)}
  if(typeof Room!=='undefined'&&Room.sun)Room.sun.position.set(tx-13,15,tz-10);
  camera.setViewOffset(innerWidth,innerHeight,0,cam.offY,innerWidth,innerHeight);camera.updateProjectionMatrix()}
-function resize(){const w=innerWidth,h=innerHeight;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(w,h,false);camera.aspect=w/h;updateCam()}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio||1,window._prB||0),2));renderer.setSize(w,h,false);camera.aspect=w/h;updateCam()}
 addEventListener('resize',resize);
 /* obstacles & path (whole island) */
 function obstacles(){const r=[];floorItems.forEach(k=>{if(k==='rug')return;const g=DG[k];if(!g)return;const fp=fpRot(g.userData.fp,itemRot(k));r.push({k,x:g.position.x,z:g.position.z,hw:fp[0]/2,hd:fp[1]/2,fl:g.userData.fl||0})});r.push({k:'stair',x:STAIR.rect.x,z:STAIR.rect.z,hw:STAIR.rect.hw,hd:STAIR.rect.hd,fl:0});r.push({k:'hole',x:STAIR.hole.x,z:STAIR.hole.z,hw:STAIR.hole.hw,hd:STAIR.hole.hd,fl:1});
@@ -1983,7 +2050,7 @@ function bedSpec(){const g=DG.bed;if(!g)return null;return{x:g.position.x,z:g.po
 function bedApproach(b){const g=DG.bed,fp=fpRot(g.userData.fp,itemRot('bed')),hw=fp[0]/2;const c=[[b.x,b.z+b.L/2+.9],[b.x+hw+.8,b.z+.3],[b.x-hw-.8,b.z+.3]];const obs=obstacles();
  for(const p of c){PFL=b.fl;const bl=blockedAt(p[0],p[1],obs,.4);PFL=0;if(!bl&&(b.fl===0||p[1]<=-.8))return p}return c[b.fl?1:0]}
 function goSleep(){if(PET.mode==='sleep'||PET.mode==='toBed'||PET.mode==='climb')return;endPlay();const b=bedSpec();
- if(b){const ap=bedApproach(b);const ok=walkTo(ap[0],ap[1],()=>{setMode('climb');PET.cl=0;PET.fromX=PET.x;PET.fromZ=PET.z;PET.fromYaw=PET.yaw},b.fl);if(ok)PET.mode='toBed';else{setMode('climb');PET.cl=0}}
+ if(b){const ap=bedApproach(b);const ok=walkTo(ap[0],ap[1],()=>{setMode('climb');PET.cl=0;PET.fromX=PET.x;PET.fromZ=PET.z;PET.fromYaw=PET.yaw},b.fl);if(ok){if(PET.mode!=='climb')PET.mode='toBed'}else{setMode('climb');PET.cl=0}}
  else{setMode('climb');PET.cl=0;PET.floorSleep=true}}
 function setMode(m,t){PET.mode=m;PET.timer=t||0;if(m!=='walk'&&m!=='toBed'){PET.walkAmt=0}}
 let LASTSPOT=null;
@@ -2202,7 +2269,12 @@ function greetLine(){return Math.random()<.5?ln('greet'):pick(LG().TIERG[tierOf(
 function toneTail(neg){const t=tierOf();if(neg)return'';if(t>=3&&Math.random()<.4)return' '+pick(LG().TAIL.endear);if(t===0&&Math.random()<.3)return LG().TAIL.stranger;return''}
 /* bubbles / log / particles */
 const bub=document.getElementById('bubble');let bubT=0;
-function say(text,o){if(SIM)return;o=o||{};bub.textContent=text;bub.classList.add('show');bubT=nowS()+(o.ms||Math.max(3600,text.length*(S.lang==='en'?95:210)));sayTone=o.noface?null:(()=>{const t=toneOf(text);return t?Object.assign(t,{until:bubT}):null})();if(!o.nolog)logChat('pet',text)}
+/* v4.2.1 anti-spam: identical spontaneous bubbles are dropped (max 2 per 2 min, 4 per game day); child-initiated asks go through askGate */
+const SAYH={};
+function askGate(key,coolMs,perDay){if(SIM)return false;const A=(S.askg=S.askg||{});const now=Date.now(),day=clock().day;const k=A[key]||(A[key]={t:0,n:0,d:-1});if(k.d!==day){k.d=day;k.n=0}
+ if(now-k.t<coolMs||k.n>=(perDay||2))return false;const g=A._g||0;if(now-g<60000)return false;k.t=now;k.n++;A._g=now;return true}
+function say(text,o){if(SIM)return;o=o||{};if(!o.force&&!(typeof CU!=='undefined'&&CU.busy>nowS())){const t=String(text),h=SAYH[t]||(SAYH[t]=[]),nw=nowS(),dy=S&&S.birth?Math.floor(wsec()/86400):0;while(h.length&&nw-h[0].t>120)h.shift();if(h.length>=2||(h.length&&nw-h[h.length-1].t<45))return;const cnt=(SAYH._d&&SAYH._d.d===dy)?SAYH._d:(SAYH._d={d:dy,c:{}});if((cnt.c[t]||0)>=3)return;cnt.c[t]=(cnt.c[t]||0)+1;h.push({t:nw})}
+bub.textContent=text;bub.classList.add('show');bubT=nowS()+(o.ms||Math.max(3600,text.length*(S.lang==='en'?95:210)));sayTone=o.noface?null:(()=>{const t=toneOf(text);return t?Object.assign(t,{until:bubT}):null})();if(!o.nolog)logChat('pet',text)}
 function logChat(w,t){S.chat.push({w,t});if(S.chat.length>60)S.chat.shift();if(typeof renderLog==='function')renderLog()}
 function worldScreen(x,y,z){const v=new V3(x,y,z);v.project(camera);return{x:(v.x*.5+.5)*innerWidth,y:(-v.y*.5+.5)*innerHeight-(camera.view?camera.view.offsetY:0)}}
 function headScreen(dy){const A=PET.A;const v=new V3();A.head.getWorldPosition(v);return worldScreen(v.x,v.y+(dy==null?1.55:dy),v.z)}
@@ -2397,7 +2469,7 @@ function chatReply(txt){const topic=chatTopic(txt);const R=LG().CH.R;
  case'disfood':{const id=pick(P.df);S.disc.f[id]=-1;s=fmt(R.disfood,{food:nm(foodOf(id))});emo=negFlavor();break}
  case'likestyle':{const st=pick(P.lc);S.disc.dc[st]=1;s=fmt(R.likestyle,{st:stN(st)});emo='shy';break}
  case'hello':s=greetLine();emo=tier>=2?'happy':null;break;
- case'weather':{const sea=seasonOf(c),out=Math.round(tempOutC(c)),inn=Math.round(indoorTemp(tempOutC(c)));const sn=S.lang==='en'?SEA[sea].e:SEA[sea].n;s=fmt(R.weather,{s:sn,o:out,i:inn})+' '+(S.tc.c>.3?R.wCold:S.tc.h>.3?R.wHot:R.wOk);if(S.tc.c>.4)emo='cold';else if(S.tc.h>.4)emo='hot';break}
+ case'weather':{const sea=seasonOf(c),out=Math.round(tempOutC(c)),inn=Math.round(indoorTemp(tempOutC(c)));const sn=S.lang==='en'?SEA[sea].e:SEA[sea].n;s=fmt(R.weather,{s:sn,o:out,i:inn})+' '+(S.tc.c>.3?R.wCold:S.tc.h>.3?R.wHot:R.wOk)+' '+wxPhrase();if(S.tc.c>.4)emo='cold';else if(S.tc.h>.4)emo='hot';break}
  case'pets':{if(!S.pets.length)s=R.petNone;else{const p=pick(S.pets);s=fmt(R.petHas,{p:p.name});S.disc.pe[p.type]=S.disc.pe[p.type]||(S.P.pk===p.type?1:S.P.pdk===p.type?-1:.5);emo=S.P.pk===p.type?'love':null}break}
  case'play':{const ks=FUN_KEYS().filter(k=>S.play[k]);if(!ks.length)s=R.playNone;else{const k=ks.includes(P.pl)?P.pl:ks.includes(P.pl2)?P.pl2:pick(ks);s=fmt(R.playHas,{item:nm(PLAY[k])});S.disc.pl[k]=playLikeOf(k)||.5;emo='happy'}break}
  case'food':s=n.food<35?ln('hungry'):n.food>85?R.foodFull:R.foodMid;break;
@@ -2758,7 +2830,7 @@ function feelText(){const e=PET.emo,n=S.needs;const ps=S.psy;let why='';try{why=
 function likeText(){const P=S.P;const f=(P.lf||[]).slice(0,2).map(foodNm);const pl=P.pl?playNm(P.pl):'';const pk=PTYPES[P.pk]?nm(PTYPES[P.pk]):'';
  return TT('我最喜欢吃'+f.join('和')+'！还喜欢玩'+pl+(pk?'，还有'+pk:'')+'。你呢？','I love '+f.join(' and ')+'! I like the '+pl+(pk?' and '+pk:'')+' too. What about you?','すきなのは'+f.join('と')+'！'+pl+'で'+'あそぶのもすき'+(pk?'、'+pk+'も':'')+'。あなたは？')}
 function dislikeText(){const P=S.P;const f=(P.df||[]).slice(0,2).map(foodNm);const pk=PTYPES[P.pdk]?nm(PTYPES[P.pdk]):'';
- return TT('我不爱吃'+f.join('和')+'，有点苦。'+(pk?'我还有一点怕'+pk+'。':'')+'还怕打雷和天黑。','I do not like '+f.join(' and ')+'.'+(pk?' I am a little scared of '+pk+'.':'')+' And thunder and the dark.',f.join('と')+'はにがてなの。'+(pk?pk+'も、ちょっとこわい。':'')+'かみなりとくらいのもこわい。')}
+ return TT('我不爱吃'+f.join('和')+'，有点苦。'+(pk?'我还有一点怕'+pk+'。':'')+(S.log.thunder>0?'还怕打雷和天黑。':'还怕天黑。'),'I do not like '+f.join(' and ')+'.'+(pk?' I am a little scared of '+pk+'.':'')+(S.log.thunder>0?' And thunder and the dark.':' And the dark.'),f.join('と')+'はにがてなの。'+(pk?pk+'も、ちょっとこわい。':'')+(S.log.thunder>0?'かみなりとくらいのもこわい。':'くらいのもこわい。'))}
 function eatenText(){const a=S.log.ate||[];if(!a.length)return TT('今天还没吃东西呢…','I have not eaten anything today…','きょうはまだなにもたべてないよ…');const l=a.slice(-3).map(x=>foodNm(x.f));return TT('我吃了'+l.join('、')+'！'+(a[a.length-1].l?'最后那个特别好吃。':''),'I had '+l.join(', ')+'!'+(a[a.length-1].l?' The last one was yummy.':''),l.join('、')+'をたべたよ！')}
 function dayText(){const L=S.log;if(!(L.ate||[]).length&&!Object.keys(L.playt||{}).length&&!(L.chat>1))return TT('今天还没做什么呢，就在家里发呆，等你来。','I have not done much today, just waiting for you at home.','きょうはまだなにもしてないよ。おうちでまってたの。');const p=Object.keys(L.playt||{}).filter(k=>PLAY[k]).map(playNm);const a=(L.ate||[]).length,c=L.chat||0;
  return TT('今天吃了'+a+'次东西'+(p.length?'，玩了'+p.slice(0,2).join('和'):'，还没怎么玩')+(c?'，还跟你聊了'+c+'句。':'。'),'Today I ate '+a+' time(s)'+(p.length?', played with the '+p.slice(0,2).join(' and the '):', did not play much')+(c?', and we chatted '+c+' times.':'.'),'きょうは'+a+'かいたべて'+(p.length?'、'+p.slice(0,2).join('と')+'であそんで':'、あまりあそんでなくて')+(c?'、'+c+'かいおしゃべりしたよ。':'。'))}
@@ -2866,24 +2938,52 @@ function llmSystem(){const P=S.P,n=S.needs,ps=S.psy,e=PET.emo;const lang={zh:'Si
  return `You are ${P.name}, a 5-year-old child living in a tiny house on a small island (a cozy virtual-pet game). Personality: ${P.trait}. Speak ONLY in ${lang}, in a very short childlike voice (1-2 short sentences, simple words, no emoji spam). ALWAYS answer what the user just said or asked first, directly and on topic; only then you may add your own feeling or a small question. Never ignore the user, never talk about unrelated things, never break character, never mention being an AI.
 Current state (0-100): fullness ${Math.round(n.food)}, energy ${Math.round(n.energy)}, mood ${Math.round(n.mood)}, company ${Math.round(n.social)}, fun ${Math.round(n.fun)}. Visible emotion: ${e}. Current activity: ${actText()}.
 Relationship: affection ${Math.round(S.bond)}/100, trust ${Math.round((ps.trust||0)*100)}, fear of the user ${Math.round((ps.ufear||0)*100)}, hurt ${Math.round((ps.hurt||0)*100)}, attachment style ${typeof psyAttStyle==='function'?psyAttStyle():'secure'}. Favourite foods: ${(P.lf||[]).slice(0,3).map(foodNm).join(', ')}; dislikes: ${(P.df||[]).slice(0,2).map(foodNm).join(', ')}. Wearing: ${outfitName(outfitOf(S.outfit))}. Recent memories: ${mem||'none'}. Things the user taught you: ${learned||'none'}.
-Reply with ONLY a JSON object: {"reply":"<what you say>","emotion":"happy|excited|sad|angry|fear|shy|pout|neutral","appraisal":{"joy":-1..1,"sad":-1..1,"anger":-1..1,"fear":-1..1,"shame":-1..1,"trust":-1..1}} where appraisal is how the user's message changed your feelings (usually small, mostly 0).`}
-async function llmReply(txt,plan){const c=llmCfg();const hist=CU.ctx.slice(-4).flatMap(x=>[{role:'user',content:x.raw}].concat(x.s?[{role:'assistant',content:x.s}]:[]));
- const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),12000);
- try{const url=c.url.replace(/\/+$/,'').replace(/\/chat\/completions$/,'')+'/chat/completions';
-  const r=await fetch(url,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json','Authorization':'Bearer '+c.key},body:JSON.stringify({model:c.model||'gpt-4o-mini',temperature:.8,max_tokens:220,messages:[{role:'system',content:llmSystem()}].concat(CU.llmHist||[]).concat([{role:'user',content:txt}])})});
-  if(!r.ok)throw new Error('http '+r.status);const j=await r.json();const raw=(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||'';
-  const m=raw.match(/\{[\s\S]*\}/);let o=null;if(m){try{o=JSON.parse(m[0])}catch(e){}}
-  const reply=o&&o.reply?String(o.reply).slice(0,160):(raw&&!m?raw.slice(0,160):'');if(!reply)throw new Error('empty');
+${typeof llmExtra==='function'?llmExtra():''}
+Reply with ONLY a JSON object (no markdown, no code fences, no explanation): {"reply":"<what you say>","emotion":"happy|excited|sad|angry|fear|shy|pout|neutral|remorse|wronged|impatient","appraisal":{"joy":-1..1,"sad":-1..1,"anger":-1..1,"fear":-1..1,"shame":-1..1,"trust":-1..1}} where appraisal is how the user's message changed your feelings (usually small, mostly 0).`}
+function llmUrl(b){b=String(b||'').trim().replace(/\/+$/,'').replace(/\/chat\/completions$/,'').replace(/\/+$/,'');if(/^https?:\/\/[^\/]+$/.test(b))b+='/v1';return b+'/chat/completions'}
+const llmIsDS=c=>/deepseek/i.test(c.url||'')||/^deepseek/i.test(c.model||'');
+const llmJsonOK=c=>llmIsDS(c)||/openai\.com|api\.x\.ai/i.test(c.url||'');
+function llmParse(raw){raw=String(raw==null?'':raw).replace(/^\uFEFF/,'').trim();if(!raw)return null;const t=raw.replace(/```[a-zA-Z]*/g,'').trim();const i=t.indexOf('{');
+ if(i<0)return t?{text:t}:null;
+ let d=0,ins=false,esc=false;for(let k=i;k<t.length;k++){const ch=t[k];if(ins){if(esc)esc=false;else if(ch==='\\')esc=true;else if(ch==='"')ins=false}else if(ch==='"')ins=true;else if(ch==='{')d++;else if(ch==='}'){d--;if(d===0){try{return{o:JSON.parse(t.slice(i,k+1))}}catch(e){break}}}}
+ const m=t.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)/); // truncated / slightly broken JSON: salvage the reply
+ if(m){let r=m[1];try{r=JSON.parse('"'+r+'"')}catch(e){r=r.replace(/\\n/g,' ').replace(/\\"/g,'"')}return{o:{reply:r}}}
+ return null}
+const LLM_EMO=['happy','excited','sad','angry','fear','shy','pout','neutral','remorse','wronged','impatient'];
+function llmLearnTitle(txt){const m=String(txt||'').match(/(?:我是你的?|我就是你的?|叫我|喊我|以后叫我|call me|i am your|i'm your|ぼくは|わたしは)\s*(妈妈|爸爸|姐姐|哥哥|奶奶|爷爷|老师|阿姨|叔叔|mom|mum|mommy|dad|daddy|teacher|sister|brother|ママ|パパ|おねえちゃん|おにいちゃん|せんせい)/i);if(m){const f=typeof fxs==='function'?fxs():(S.fx=S.fx||{});f.callMe=m[1]}}
+async function llmReply(txt,plan){const c=llmCfg();llmLearnTitle(txt);
+ const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),15000);
+ try{const url=llmUrl(c.url),ds=llmIsDS(c);
+  const mk=(json)=>{const b={model:c.model||(ds?'deepseek-flash':'gpt-4o-mini'),temperature:.8,max_tokens:ds?700:400,messages:[{role:'system',content:llmSystem()}].concat(CU.llmHist||[]).concat([{role:'user',content:txt}])};if(ds)b.thinking={type:'disabled'};if(json&&llmJsonOK(c))b.response_format={type:'json_object'};return JSON.stringify(b)};
+  const call=async(json)=>{const r=await fetch(url,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json','Authorization':'Bearer '+c.key},body:mk(json)});if(!r.ok){const e=new Error('http '+r.status);e.status=r.status;throw e}const j=await r.json();const msg=j&&j.choices&&j.choices[0]&&j.choices[0].message;return(msg&&typeof msg.content==='string'?msg.content:'')}; // reasoning_content is ignored on purpose
+  let raw;try{raw=await call(true)}catch(e){if(llmJsonOK(c)&&(e.status===400||e.status===422))raw=await call(false);else throw e}
+  if(!String(raw).trim()&&llmJsonOK(c))raw=await call(false); // JSON mode can come back blank: retry once without it
+  const p=llmParse(raw);if(!p)throw new Error('empty');const o=p.o||null;
+  const reply=String(o?(o.reply||o.text||o.content||''):p.text||'').trim().slice(0,160);if(!reply)throw new Error('empty');
   CU.llmHist=(CU.llmHist||[]).concat([{role:'user',content:txt},{role:'assistant',content:reply}]).slice(-8);
-  const emo=['happy','excited','sad','angry','fear','shy','pout','neutral'].includes(o&&o.emotion)?(o.emotion==='angry'?'angry':o.emotion):null;
-  return{reply,emo,appraisal:o&&o.appraisal}}finally{clearTimeout(to)}}
+  const emo=LLM_EMO.includes(o&&o.emotion)?o.emotion:null;
+  return{reply,emo,appraisal:o&&o.appraisal}}
+ catch(e){if(e&&e.name==='AbortError')throw new Error('timeout');throw e}
+ finally{clearTimeout(to)}}
+function llmExtra(){const P=S.P,ps=S.psy||{},L=LI(),o=[];
+ o.push(S.gender==='f'?'You are a girl (she/her, in Chinese 她).':'You are a boy (he/him, in Chinese 他).');
+ try{const f=typeof fxs==='function'?fxs():(S.fx||{});if(f.callMe)o.push(`You call the player "${f.callMe}" and talk to them as your ${f.callMe}.`);else o.push('You call the player by a warm, simple name (e.g. "你"); if they told you a role like mom/dad/teacher, use it.');}catch(e){}
+ try{const c=cultOf(),C=CULT[c.bg];let v='';try{v=valStyle()}catch(e){}o.push(`Family culture: ${C?C.n[L]:'mixed'}${v&&v!=='unknown'?'; your values lean: '+v:''}. Honour its customs, foods and festivals naturally, never lecture.`)}catch(e){}
+ try{const f=fxs(),c=clock();const A=(f.act||[]).slice(-7);if(A.length){o.push('What you did recently (newest last; answer "what did you do / where did you go / what did you eat" from this list, in your own words, in a childlike way): '+A.map(x=>{const when=x.day===c.day?'today '+String(Math.floor(x.h)).padStart(2,'0')+':00':'earlier';return `[${when}] ${x.k} at ${x.z}${x.o&&x.o.length?' ('+x.o.slice(0,3).join(', ')+')':''}${x.who?' with '+x.who:''}${x.fp?' (a place you are not allowed to go: feel guilty, hesitate, then be honest)':''}`}).join('; ')+'. If it is not in the list, say you do not remember rather than inventing.')}else o.push('You have not done much yet today; if asked what you did, mention your current activity.')}catch(e){}
+ try{o.push('Current weather: '+(typeof wxPhrase==='function'?wxPhrase():'unknown')+' Thunder only happens in a real thunderstorm; never mention thunder otherwise.')}catch(e){}
+ try{const f=fxs(),B=bs();const rl=[...new Set((f.rules||[]).slice(-6).map(r=>r.k))].filter(Boolean);const rb=Object.keys(B.rules||{}).filter(k=>B.rules[k]);const fr=Object.keys(B.fear||{}).filter(k=>B.fear[k]>.3);
+  o.push(`Rules you have been taught: ${rl.concat(rb).join(', ')||'none yet'}. Animals/things you fear: ${fr.join(', ')||'the dark a little, wild beasts in the deep woods'}. You must not go to deep woods at night or near beasts.`)}catch(e){}
+ o.push('How you react to tone: if the player calmly explains a rule or teaches you something, you listen and accept it (mostly neutral or positive, never angry); sometimes you do not understand a long or abstract explanation, then say so ("为什么呀？我不太懂") and become happy when it is explained more simply. Only scolding, blaming, insults or yelling upset you. If you were naughty/hurt yourself and get scolded: feel remorse (emotion "remorse", small apologetic voice). If blamed unfairly: feel wronged ("wronged"). If scolded again and again: first impatient ("impatient", "我都知道了嘛"), then go quiet and withdrawn (sad, very short), with trust and affection dropping; only occasionally defiant. Comfort and apology repair this quickly. Harsh insults make you scared/hurt, not just angry.');
+ return o.join('\n')}
 function applyAppraisal(a){const ps=S.psy;if(!ps||!a)return;const cl=v=>clamp(+v||0,-1,1);const em=ps.em;
  em.joy=clamp(em.joy+cl(a.joy)*.2,0,1);em.sad=clamp(em.sad+cl(a.sad)*.2,0,1);em.anger=clamp(em.anger+cl(a.anger)*.2,0,1);em.fear=clamp(em.fear+cl(a.fear)*.2,0,1);em.shame=clamp(em.shame+cl(a.shame)*.2,0,1);ps.trust=clamp(ps.trust+cl(a.trust)*.02,0,1);
  if(cl(a.joy)>.3)mood(2);if(cl(a.sad)+cl(a.anger)>.6)mood(-3)}
 async function llmTest(){const c=llmCfg();try{const r=await llmReply('你好',{});return r&&r.reply?'ok: '+r.reply:'no reply'}catch(e){return 'error: '+e.message}}
-function llmPanelHTML(){const c=llmCfg();const L=LI();const t=[['🤖 AI 模式（可选）','🤖 AI mode (optional)','🤖 AIモード（任意）'],['接口地址（OpenAI 兼容，如 https://api.openai.com/v1 / https://api.x.ai/v1 / https://api.deepseek.com/v1）','Endpoint (OpenAI-compatible, e.g. https://api.openai.com/v1 or https://api.x.ai/v1)','エンドポイント（OpenAI互換）'],['密钥只保存在本机浏览器','The key stays only in this browser','キーはこのブラウザにのみ保存'],['启用','Enable','有効'],['保存并测试','Save & test','保存してテスト']].map(x=>x[L]);
- return `<details class="llm"><summary>${t[0]}</summary><div class="llmf"><label>${t[1]}<input id="llu" value="${(c.url||'').replace(/"/g,'')}" placeholder="https://api.openai.com/v1"></label><label>Model<input id="llm" value="${(c.model||'').replace(/"/g,'')}" placeholder="gpt-4o-mini"></label><label>API key<input id="llk" type="password" value="${c.key?'••••••••':''}" placeholder="sk-…" autocomplete="off"></label><label class="ck"><input type="checkbox" id="llo" ${c.on?'checked':''}> ${t[3]}</label><button class="btn" id="llb">${t[4]}</button><small id="lls">${t[2]}</small></div></details>`}
-function llmBind(){const b=document.getElementById('llb');if(!b)return;b.onclick=async()=>{const c=llmCfg();const k=document.getElementById('llk').value;if(k&&!/^•+$/.test(k))c.key=k.trim();c.url=document.getElementById('llu').value.trim();c.model=document.getElementById('llm').value.trim();c.on=document.getElementById('llo').checked;llmSave(c);const st=document.getElementById('lls');st.textContent='…';st.textContent=await llmTest()}}
+const LLM_PRESETS={deepseek:{n:'DeepSeek',url:'https://api.deepseek.com',model:'deepseek-flash'},openai:{n:'OpenAI',url:'https://api.openai.com/v1',model:'gpt-4o-mini'},xai:{n:'xAI',url:'https://api.x.ai/v1',model:'grok-3-mini'}};
+function llmPanelHTML(){const c=llmCfg();const L=LI();const t=[['🤖 AI 模式（可选）','🤖 AI mode (optional)','🤖 AIモード（任意）'],['接口地址（OpenAI 兼容，带不带 /v1 都行）','Endpoint (OpenAI-compatible, with or without /v1)','エンドポイント（OpenAI互換、/v1あり・なし両方OK）'],['密钥只保存在本机浏览器','The key stays only in this browser','キーはこのブラウザにのみ保存'],['启用','Enable','有効'],['保存并测试','Save & test','保存してテスト'],['服务商预设','Provider preset','プリセット'],['自定义','Custom','カスタム']].map(x=>x[L]);
+ const pk=Object.keys(LLM_PRESETS).find(k=>c.url&&c.url.indexOf(LLM_PRESETS[k].url.replace(/^https?:\/\//,'').split('/')[0])>=0)||'';
+ return `<details class="llm"><summary>${t[0]}</summary><div class="llmf"><label>${t[5]}<select id="llp"><option value="">${t[6]}</option>${Object.keys(LLM_PRESETS).map(k=>`<option value="${k}" ${pk===k?'selected':''}>${LLM_PRESETS[k].n}</option>`).join('')}</select></label><label>${t[1]}<input id="llu" value="${(c.url||'').replace(/"/g,'')}" placeholder="https://api.deepseek.com"></label><label>Model<input id="llm" value="${(c.model||'').replace(/"/g,'')}" placeholder="deepseek-flash"></label><label>API key<input id="llk" type="password" value="${c.key?'••••••••':''}" placeholder="sk-…" autocomplete="off"></label><label class="ck"><input type="checkbox" id="llo" ${c.on?'checked':''}> ${t[3]}</label><button class="btn" id="llb">${t[4]}</button><small id="lls">${t[2]}</small></div></details>`}
+function llmBind(){const b=document.getElementById('llb');if(!b)return;const sel=document.getElementById('llp');if(sel)sel.onchange=()=>{const p=LLM_PRESETS[sel.value];if(p){document.getElementById('llu').value=p.url;document.getElementById('llm').value=p.model}};b.onclick=async()=>{const c=llmCfg();const k=document.getElementById('llk').value;if(k&&!/^•+$/.test(k))c.key=k.trim();c.url=document.getElementById('llu').value.trim();c.model=document.getElementById('llm').value.trim();c.on=document.getElementById('llo').checked;llmSave(c);const st=document.getElementById('lls');st.textContent='…';st.textContent=await llmTest()}}
 
 /* ===== life.js: relationship meters, promises, child questions, outdoor autonomy (retreat / fishing),
    woods + sea risks, grounding, event log (calendar). Everything runs through the psyche state. ===== */
@@ -3533,7 +3633,7 @@ function valTick(dt,nowMs){const V=vst();if(!V||SIM||S.dead||S.sleeping||chatBus
  if(nowMs-V.lastSay>1500000+Math.random()*600000){let best=null,bd=0;VDIM.forEach(d=>{const x=Math.abs(V.v[d]-.5);if(x>bd){bd=x;best=d}});if(best&&bd>.1&&Math.random()<.6){V.lastSay=nowMs;say(valLine(best,V.v[best]>=.5),{ms:5000});S.psy.mem.length}else V.lastSay=nowMs-1000000}}
 const _lt1=lifeTick;lifeTick=function(dt,nowMs,sim){_lt1(dt,nowMs,sim);if(!sim&&!S.dead){try{valTick(dt,nowMs)}catch(e){if(!window.__valErr){window.__valErr=1;console.error('val',e)}}}};
 /* bedtime stories + festivals in the calendar */
-const _gs0=goSleep;goSleep=function(){const r=_gs0.apply(this,arguments);try{const c=CULT[cultOf().bg];if(c&&c.st.length&&!SIM){const s=c.st[Math.floor(Math.random()*c.st.length)];setTimeout(()=>{if(PET.mode==='sleep'||S.sleeping||true)say(TT('今天睡前，我想听《'+s[0]+'》……','Tonight I would like the story of "'+s[1]+'"…','きょうはねるまえに「'+s[2]+'」がききたいな…'),{ms:5000})},1800)}}catch(e){}return r};
+const _gs0=goSleep;goSleep=function(){const m0=PET.mode,sl0=S.sleeping;const r=_gs0.apply(this,arguments);try{if(m0==='sleep'||m0==='toBed'||m0==='climb'||sl0||PET.mode==='sleep'&&m0==='sleep')return r;if(!(PET.mode==='toBed'||PET.mode==='climb'||PET.mode==='walk'))return r;const c=CULT[cultOf().bg];if(c&&c.st.length&&!SIM&&askGate('story',6*3600*1000/TS,1)){const s=c.st[Math.floor(Math.random()*c.st.length)];setTimeout(()=>{say(TT('今天睡前，我想听《'+s[0]+'》……','Tonight I would like the story of "'+s[1]+'"…','きょうはねるまえに「'+s[2]+'」がききたいな…'),{ms:5000})},1800)}}catch(e){}return r};
 const _cs0=calSpecial;calSpecial=function(d){const r=_cs0(d);cultFest(d).forEach(f=>r.push(['festival',f[2+LI()]]));return r};
 function cultInit(){const c=cultOf(),P=S.P,C=CULT[c.bg];if(!C||!C.foods.length||P.cultDone)return;const fid=FOODS.map(f=>f.id);C.foods.forEach(f=>{if(fid.includes(f)&&!P.lf.includes(f)&&!P.df.includes(f)){const i=P.lf.length-1;P.lf[i]=f}});P.cultDone=1}
 /* ---------- monthly report: how values changed and why, inferred parenting style ---------- */
@@ -3944,7 +4044,7 @@ function bstTick(dt,nowMs){if(S.dead||!S.P||!BST.ready)return;const B=bs(),c=clo
  if(BST.howlEv){BST.howlEv=0;bstHeard(nowMs)}
  bstSharkSight(dt,nowMs);
  if(S.sleeping||PET.mode==='sleep'){if(B.nm&&!B.nmAt)B.nmAt=nowMs+30000+Math.random()*80000;if(B.nm&&B.nmAt&&nowMs>B.nmAt&&PET.mode==='sleep')bstNightmare()}
- if(B.needC&&!S.sleeping){const el=nowMs-B.needC;BST.cl=(BST.cl||0)-dt;if(BST.cl<=0&&el>30000&&!BST.chase&&typeof chatBusy==='function'&&!chatBusy()){BST.cl=55;if(Math.random()<.7)say(BSV.clingy[LI()],{ms:3800})}
+ if(B.needC&&!S.sleeping){const el=nowMs-B.needC;BST.cl=(BST.cl||0)-dt;if(BST.cl<=0&&el>30000&&!BST.chase&&typeof chatBusy==='function'&&!chatBusy()){BST.cl=55;B.clN=B.clN||0;if(B.clAt!==B.needC){B.clAt=B.needC;B.clN=0}if(B.clN<2&&Math.random()<.7&&askGate('clingy',240000,3)){B.clN++;say(BSV.clingy[LI()],{ms:3800})}}
   if(el>720000){B.needC=0;const ps=S.psy;ps.em.fear*=.7;lf().sec=clamp(lf().sec-.02,0,1);say(BSV.selfcalm[LI()],{ms:4800});bstCardHide()}}
  const bst=st.bear;if(B.bearSt!==bst){if(B.bearSt!=null&&!SIM){if(bst==='hib')logEv('hib',TT('熊回到洞穴开始冬眠','The bear went into its den to hibernate','くまがほらあなでとうみんをはじめた'));else if(B.bearSt==='hib')logEv('wake',TT('熊睡醒了，春天来了','The bear woke up — spring is here','くまがめをさました。はるがきた'))}B.bearSt=bst}
  if(B.sharkSt!==st.shark&&(st.shark==='away'||B.sharkSt==='away')){if(B.sharkSt!=null&&!SIM)logEv('beast',st.shark==='away'?TT('鲨鱼游去深海过冬了','The shark swam to deeper water for winter','サメがふゆをこすためにふかいうみへいった'):TT('鲨鱼回到近海了','The shark is back offshore','サメがおきあいにもどってきた'))}B.sharkSt=st.shark}
@@ -4101,6 +4201,242 @@ function makeReport(m){const ds=S.days.filter(d=>Math.floor(d.d/30)===m);if(!ds.
  try{narr+=valReportText(m)}catch(e){console.error('valrep',e)}
  S.reports.push({m,dims:D,stress:Math.round(stress),lonely:Math.round(100-D['陪伴感']),overall,level,narr,facts:facts+factsX,advice,q,delta,N,bond:Math.round(S.bond),tier:TIERS[tierOf()]});
  S.unread=(S.unread||0)+1;if(typeof onReportNew==='function'&&!SIM)onReportNew()}
+
+/* ===== fix421.js (v4.2.1): activity memory + 'about me' answers, criticism appraisal (remorse / wronged / impatient / withdrawn ...),
+   calm rule-teaching, tone fix. Loaded after every other module. ===== */
+const FXAPI=window.FXAPI={force:null,rnd:null};
+const fxs=()=>{if(!S.fx)S.fx={act:[],crit:{n:0,t:0},under:.4,rules:[],pend:null,ctx:null,mishap:null,repair:null,guilt:null,rr:{k:'',n:0,t:0}};const f=S.fx;if(!f.act)f.act=[];if(!f.crit)f.crit={n:0,t:0};if(!f.rr)f.rr={k:'',n:0,t:0};return f};
+const L3x=(a,b,c)=>TT(a,b,c);
+const fxRn=()=>FXAPI.rnd!=null?FXAPI.rnd:Math.random();
+function fxSay(s,face,sec,ms){say(s,{ms:ms||4600,noface:true});if(face)evoke(face,sec||5)}
+/* ---------- faces for the new emotions ---------- */
+Object.assign(FACE,{
+ remorse:{eye:'oval',mouth:'frown',ms:.6,br:[-.22,-.05],blush:.6,tears:1,sweat:1,ao:.08,af:0,pitch:.42,yaw:.28,sq:.97,bob:[.01,.9]},
+ wronged:{eye:'oval',eyeS:1.12,mouth:'tremble',ms:.9,br:[-.32,-.02],tears:1,blush:1,ao:.1,af:.6,pitch:.16,yaw:.2,roll:.1,trem:.02,bob:[.012,1.2]},
+ impatient:{eye:'glance',mouth:'flat',ms:1,br:[.2,.05],blush:.5,ao:.3,af:.3,pitch:-.06,yaw:.5,roll:-.14,bob:[.02,3.2]}});
+Object.assign(EMO_CAT,{remorse:'neg',wronged:'neg',impatient:'neg'});
+Object.assign(EMO_LABEL,{remorse:'😔 后悔',wronged:'🥺 委屈',impatient:'😒 不耐烦'});
+if(typeof EMIT!=='undefined')Object.assign(EMIT,{remorse:['💧'],wronged:['💧','💢'],impatient:['💢']});
+/* ---------- tone fix: his own accepting replies ("好，我不去深林") must not turn into a pout ---------- */
+const _tone0=toneOf;toneOf=function(t){const r=_tone0.apply(this,arguments);if(r&&r.e==='pout'&&/^(好[，,！!~～。]|好的|嗯|知道了|我记住|我会|ok|okay|alright|sure|うん|わかった|はーい)/i.test(t||''))return null;return r};
+/* ---------- activity memory ---------- */
+const FZN={home:['家里','at home','おうち'],yard:['院子里','in the yard','にわ'],pond:['池塘边','by the pond','いけのそば'],forest:['小树林','in the grove','もりのいりぐち'],deep:['深林','deep in the woods','もりのおく'],beach:['海边','at the beach','うみ'],dock:['码头','on the dock','ふとう']};
+function fxZone(x,z){try{if(inRoomXZ(x,z))return'home';if(onDock(x,z))return'dock';if(x>DOCK.x0-3)return'beach';if(x<-22)return'deep';if(x<-9)return'forest';if(Math.hypot(x-POND.x,z-POND.z)<3.2)return'pond'}catch(e){}return'yard'}
+const zn=z=>(FZN[z]||FZN.yard)[LI()];
+function fxRec(k,o,opt){if(SIM||!S||!S.P)return;opt=opt||{};const f=fxs(),now=Date.now(),c=clock(),z=opt.z||fxZone(PET.x,PET.z);
+ const last=f.act[f.act.length-1];if(last&&last.k===k&&now-last.t<90000&&JSON.stringify(last.o)===JSON.stringify(o||[]))return;
+ let fp=!!opt.fp;try{if(!fp&&z==='deep'&&isNight(c.h))fp=true;if(!fp&&z!=='home'&&lifeGrounded())fp=true}catch(e){}
+ f.act.push({t:now,day:c.day,h:c.h,k,z,o:o||[],n:opt.n||0,emo:opt.emo||'happy',big:opt.big||0,fp:fp?1:0,who:opt.who||'',txt:opt.txt||null});while(f.act.length>10)f.act.shift()}
+FXAPI.rec=fxRec;
+/* hooks */
+{const _fp=fishPick;fishPick=function(){const r=_fp.apply(this,arguments);try{fxRec('fish',[r],{z:'dock',big:2})}catch(e){}return r};
+ const _fd=fgDeposit;fgDeposit=function(){try{const T=PET.fg;if(T&&T.items&&T.items.length){const names=[...new Set(T.items.map(i=>{try{return foodNm(i)}catch(e){return i}}))];fxRec('forage',names.slice(0,3),{z:'forest',n:T.items.length,big:2,who:T.wp?'player':''})}}catch(e){}return _fd.apply(this,arguments)};
+ const _lw=lifeWatchSea;lifeWatchSea=function(){const r=_lw.apply(this,arguments);try{if(PET.watch&&PET.watch.id)fxRec('watch',[wildName(PET.watch.id)],{z:fxZone(PET.x,PET.z)==='home'?'beach':fxZone(PET.x,PET.z),big:1})}catch(e){}return r};
+ const _bh=bstHome;bstHome=function(k){try{fxRec('scare',[bnm(k)],{z:fxZone(PET.x,PET.z)==='home'?'forest':fxZone(PET.x,PET.z),emo:'fear',big:3})}catch(e){}return _bh.apply(this,arguments)};
+ const _sp=startPlay;startPlay=function(k){const r=_sp.apply(this,arguments);try{if(r)fxRec('play',[playNm(k)],{big:1,z:'home'})}catch(e){}return r};
+ const _st=startPetting;startPetting=function(pp){const r=_st.apply(this,arguments);try{if(r&&pp)fxRec('pet',[pp.name],{big:1,who:pp.name})}catch(e){}return r};
+ const _ea=eat;eat=function(f,k){try{fxRec('eat',[nm(f)],{big:1,z:fxZone(PET.x,PET.z)})}catch(e){}return _ea.apply(this,arguments)};
+ if(typeof graveVisit==='function'){const _gv=graveVisit;graveVisit=function(){const r=_gv.apply(this,arguments);try{if(r)fxRec('grave',[],{z:'yard',emo:'sad',big:2})}catch(e){}return r}}
+ const MISH=['slip','woods','ill','rescue','fight'],NOTE=['woods','slip','rescue','retreat','fight','nightmare','trace'];
+ const _le=logEv;logEv=function(k,txt){const r=_le.apply(this,arguments);try{if(MISH.includes(k)){fxs().mishap={t:Date.now(),k}}if(NOTE.includes(k))fxRec('ev',[],{txt:[txt,txt,txt],emo:['slip','woods','nightmare','fight'].includes(k)?'fear':'neutral',big:3,z:fxZone(PET.x,PET.z)})}catch(e){}return r};
+ let zT=0,zLast='',zSince=0;const _lt=lifeTick;lifeTick=function(dt,nowMs,sim){const r=_lt.apply(this,arguments);try{if(!sim&&!S.sleeping){const z=fxZone(PET.x,PET.z);if(z!==zLast){zLast=z;zSince=nowMs}else if(nowMs-zSince>20000&&z!=='home'&&z!=='yard'){const a=fxs().act,l=a[a.length-1];if(!l||l.z!==z||nowMs-l.t>600000)fxRec('zone',[],{z,big:0})}}}catch(e){}return r}}
+/* composing recounts (child voice, past tense) */
+const HP=h=>h<5?L3x('半夜','in the middle of the night','よなか'):h<11?L3x('早上','this morning','あさ'):h<14?L3x('中午','at noon','おひる'):h<18?L3x('下午','this afternoon','ごご'):h<21?L3x('傍晚','in the evening','ゆうがた'):L3x('晚上','at night','よる');
+function fxTell(r){const o=r.o||[],a=o[0]||'',z=zn(r.z),n=r.n||0,L=LI();
+ const T={fish:[`我在码头钓鱼，钓到了一条${a}！`,`I went fishing at the dock and caught a ${a}!`,`ふとうでつりをして、${a}がつれたよ！`],
+  forage:[`我在森林采了${o.join('、')}，篮子里有${n}个！`,`I picked ${o.join(', ')} in the woods, and I got ${n} in my basket!`,`もりで${o.join('と')}をとったよ。かごに${n}こ！`],
+  watch:[`我在${z}看到了${a}！`,`I saw a ${a} ${z}!`,`${z}で${a}をみたよ！`],
+  scare:[`我…我在${z}碰到了${a}…好、好可怕……`,`I… I met a ${a} ${z}… it was s-so scary…`,`ぼ、ぼく…${z}で${a}にあったの…こ、こわかった……`],
+  play:[`我在家玩${a}呢！`,`I was playing with ${a} at home!`,`おうちで${a}であそんでたよ！`],
+  pet:[`我陪${a}玩啦！`,`I played with ${a}!`,`${a}とあそんだよ！`],
+  eat:[`我吃了${a}，好吃～`,`I ate ${a}. Yummy~`,`${a}をたべたよ、おいしかった～`],
+  grave:['我去看了小坟坟…有点想它。','I visited the little grave… I miss it a bit.','おはかにいってきた…ちょっとさみしい。'],
+  zone:[`我去${z}逛了逛。`,`I went for a walk ${z}.`,`${z}をさんぽしてきたよ。`],
+  ev:[a||'',a||'',a||'']};
+ const t=r.k==='ev'?(r.txt?r.txt[L]:''):T[r.k]?T[r.k][L]:'';return t}
+function fxHomeLine(){const P=S.P,n=S.needs;const pl=Object.keys(S.play||{});if(pl.length&&n.fun<75)return L3x('我在家玩'+playNm(pl[0])+'呢。','I was playing with '+playNm(pl[0])+' at home.','おうちで'+playNm(pl[0])+'であそんでたよ。');if(S.pets.length)return L3x('我在家陪'+S.pets[0].name+'玩呢。','I was at home playing with '+S.pets[0].name+'.',S.pets[0].name+'とおうちであそんでたよ。');if(n.energy<35)return L3x('我在家歇着呢，有点困。','I was resting at home. A bit sleepy.','おうちでやすんでたよ。ちょっとねむい。');return L3x('我在家画画呢～','I was drawing at home~','おうちでおえかきしてたよ～')}
+function fxRecent(max){const f=fxs();const a=f.act.slice().reverse();const out=[];for(const r of a){if(r.k==='zone'&&out.length)continue;out.push(r);if(out.length>=(max||2))break}return out}
+const FX_ACTQ=/(你|宝宝|小.)?(刚才|刚刚|今天|早上|下午|昨天|之前|方才|这几天)?(都)?(去|跑)(了)?(哪|哪儿|哪里|干|做|玩)|干(嘛|什么|啥|吗)了|做了(什么|啥|些什么)|玩了(什么|啥)|去哪(儿|里)?(了|玩)|刚才(在)?(干嘛|干什么|做什么|做啥|忙什么)|都?干了(什么|啥)|忙了(什么|啥)|在哪(儿|里)?玩了|what (did|have) you (do|been|get up)|where (did you (go|run|play)|were you|have you been)|what were you (up to|doing)(?! now)|what have you been|どこ(に)?(いって|いった|いってた)|なに(を)?(して|してた|したの)(?!る)|どこであそんだ/i;
+const FX_ATE=/你(今天|刚才|刚刚|早上|中午|晚上)?吃(了|过)(什么|啥|点什么|些什么)|what did you eat|what have you eaten|なに(を)?たべた/i;
+const FX_MOOD=/(今天|现在|最近)?(开心|高兴|快乐)吗|心情(怎么样|好吗|好不好|如何)|为什么(开心|高兴|不开心|难过|生气)|(开心|难过|生气)(吗)?[，,]?(为什么|为啥)|are you happy|how('s| is| are) (your mood|you feeling)|why are you (happy|sad|upset|angry)|きょうは?たのしい|きげんは|どうしてうれしい|なんでかなしい/i;
+const FX_DOING=/你在(做|干)(什么|嘛|啥)|在干嘛|在做什么|你(现在)?忙什么|what are you doing( now)?|what are you up to now|いま(なに)?(して(る|いる)|なにやってる)/i;
+const FX_WANT=/你想(干嘛|干什么|做什么|做啥|玩什么)|想(干嘛|做什么)呢|what do you (want|wanna) (to )?do|what would you like to do|なにしたい/i;
+const FX_FEAR=/你(怕|害怕)(什么|啥|哪些)|害怕什么|最怕什么|what are you (afraid|scared) of|what scares you|なにがこわい|こわいものは/i;
+const FX_LIKE=/你(最)?(喜欢|爱)(什么|啥|吃什么|玩什么)|喜欢什么|what do you like( best)?|what('s| is) your favou?rite|なにがすき|すきなものは/i;
+const FX_FU={then:/^(然后呢?|后来呢?|接着呢?|再然后呢?|and then\??|then what\??|what then\??|それから(は)?[?？]?|そのあと(は)?[?？]?)$/i,fun:/^(好玩吗|好玩不好玩|有趣吗|开心吗|好不好玩|怎么样|怎么样啊|was it fun\??|did you have fun\??|how was it\??|たのしかった[?？]?|どうだった[?？]?)$/i,who:/^(和谁(一起)?呢?|跟谁(一起)?呢?|一个人吗|是一个人吗|谁陪你|with who(m)?\??|who with\??|were you alone\??|だれと(いっしょに)?[?？]?|ひとりで[?？]?)$/i,when:/^(什么时候(呢|呀)?|几点(呢|呀)?|是什么时候|when( was it)?\??|いつ(のこと)?[?？]?)$/i};
+function fxClean(t){return t.trim().replace(/[呀啊嘛呢哦啦哇吧～~。.!！?？ ]+$/g,m=>/[?？]/.test(m)?m:'')}
+const FX_FUT=/想去|要去|打算|想不想|能不能|可以去|can we|shall we|let'?s|want to|going to|いきたい|いこう|いかない/i;
+function fxStart(txt){logChat('me',txt);touch('chat');S.log.chat++;hold(2)}
+function fxReply(s,face,emoSec,ms){setTimeout(()=>fxSay(s,face,emoSec,ms),420)}
+function fxMoodGate(){const ps=S.psy,d=psyOvert();const sulk=psyNow()<ps.sulk||d.anger>.3;return{sulk,shy:S.P.trait==='害羞'||(ps.att.avo>.45&&d.sad>.2)}}
+function fxRecount(txt){fxStart(txt);const f=fxs(),g=fxMoodGate(),rs=fxRecent(2).reverse(); // chronological
+ FXAPI.last={q:txt};
+ if(g.sulk){const r=fxRn();if(r<.65){fxReply(L3x('哼，不告诉你。','Hmph, I am not telling you.','ふん、おしえない。'),'pout',3);return true}fxReply(L3x('……没干嘛。','…Nothing much.','……べつに。'),'pout',3);return true}
+ const lastN=rs[rs.length-1];
+ if(lastN&&lastN.fp&&!lastN.conf){f.guilt={r:lastN,t:Date.now()};fxReply(L3x('呃…没、没去哪里呀……','Um… n-nowhere, really…','え、えっと…どこにもいってないよ……'),'shy',4);
+  const hon=(typeof vst==='function'?vst().v.honesty:.55);if(fxRn()<(hon>.5?.85:.4))setTimeout(()=>fxConfess(),5200);return true}
+ let parts=rs.map(fxTell).filter(Boolean);let em='happy',face=null;
+ if(!parts.length){fxReply(fxHomeLine(),'happy',3);f.ctx={r:null,t:Date.now()};return true}
+ f.ctx={r:lastN,t:Date.now()};em=lastN.emo;
+ let s;if(g.shy&&parts.length){s=L3x('就…','Just… ','えっと…')+parts[parts.length-1].replace(/！$/,'。')}
+ else if(parts.length>1){s=parts[0]+' '+L3x('然后，','Then, ','それから、')+parts[1]}else s=parts[0];
+ if(lastN.k==='scare'&&LI()===0)s=s;fxReply(s,em==='fear'?'fear':em==='sad'?'sad':g.shy?'shy':'happy',4,6200);return true}
+function fxConfess(){const f=fxs(),g=f.guilt;if(!g||g.done)return;g.done=1;g.r.conf=1;const z=zn(g.r.z);
+ fxSay(L3x('……对不起，我偷偷去了'+z+'了……','…I am sorry, I secretly went to '+z+'…','……ごめんなさい、こっそり'+z+'にいったの……'),'remorse',6,6000);
+ try{vpush('honesty',.5,'做了不该做的事，但是自己说出来了');mood(-1);aff(.3,'care')}catch(e){}
+ try{diaryEv('我偷偷去了'+z+'，后来自己说出来了，心里轻松了一点。','I secretly went to '+z+', but I told the truth by myself and felt lighter.','こっそり'+z+'にいったけど、じぶんでいえてすこしらくになった。');logEv('talk',TT('他承认自己偷偷去了'+z,'He admitted he had sneaked off to '+z,'こっそり'+z+'にいったとじぶんでいった'))}catch(e){}}
+FXAPI.confess=fxConfess;
+function fxFollow(txt){const f=fxs(),c=f.ctx,t=txt.trim();if(!c||Date.now()-c.t>120000)return false;let k=null;for(const x in FX_FU)if(FX_FU[x].test(t)){k=x;break}if(!k)return false;fxStart(txt);c.t=Date.now();const r=c.r,g=fxMoodGate();
+ if(g.sulk){fxReply(L3x('……不想说了。','…I do not want to talk about it.','……もういいたくない。'),'pout',3);return true}
+ if(f.guilt&&!f.guilt.done&&k!=='fun'){fxReply(L3x('……好吧，我说…','…Okay, I will tell you…','……わかった、いうね…'),'shy',2);setTimeout(fxConfess,1500);return true}
+ let s,face='happy';
+ if(k==='then'){const a=f.act,i=r?a.indexOf(r):-1;const nx=i>=0&&a[i+1]?a[i+1]:null;if(nx){c.r=nx;s=fxTell(nx)||fxHomeLine();face=nx.emo==='fear'?'fear':'happy'}else{s=r&&r.emo==='fear'?L3x('然后我就赶紧回来了…','Then I ran back home quickly…','それで、いそいでかえってきたの…'):L3x('然后就回来找你啦～','Then I came back to find you~','それで、きみのところにもどってきたよ～');face=r&&r.emo==='fear'?'fear':'love'}}
+ else if(k==='fun'){const e=r?r.emo:'happy';s=e==='fear'?L3x('一点都不好玩……我吓坏了。','Not fun at all… I got scared.','ぜんぜんたのしくない…こわかった。'):e==='sad'?L3x('有点难过……','It made me a bit sad…','ちょっとかなしかった……'):L3x('好玩！下次还想去！','It was fun! I want to go again!','たのしかった！またいきたい！');face=e==='fear'?'fear':e==='sad'?'sad':'excited'}
+ else if(k==='who'){s=r&&r.who==='player'?L3x('和你一起呀！','With you, of course!','きみといっしょだよ！'):r&&r.who&&r.who!=='player'?L3x('和'+r.who+'一起。','With '+r.who+'.',r.who+'といっしょ。'):S.pets.length&&r&&r.k!=='scare'?L3x('我一个人去的，'+S.pets[0].name+'在家等我。','I went alone. '+S.pets[0].name+' waited at home.','ひとりでいったよ。'+S.pets[0].name+'はおうちでまってた。'):L3x('我一个人去的。','I went by myself.','ひとりでいったよ。');face='neutral'}
+ else{const h=r?r.h:clock().h;s=L3x(HP(h)+'呀。',HP(h)[0].toUpperCase()+HP(h).slice(1)+'.',HP(h)+'だよ。');face='neutral'}
+ fxReply(s,face,3);return true}
+/* ---------- other 'about me' questions, answered from real state ---------- */
+function fxAbout(txt){const ps=S.psy,n=S.needs,P=S.P,L=LI();
+ if(FX_ATE.test(txt)){fxStart(txt);const a=(S.log.ate||[]).slice(-2).reverse();let s;if(!a.length)s=L3x('我今天还没吃东西呢…肚子有点空。','I have not eaten anything today… my tummy is a bit empty.','きょうはまだなにもたべてないよ…おなかすいた。');else{const nms=a.map(x=>{try{return foodNm(x.f)}catch(e){return x.f}});const lk=a[0].l;s=L3x('我吃了'+nms.join('和')+(lk?'，是我喜欢的！':'。'),'I ate '+nms.join(' and ')+(lk?' — one of my favourites!':'.'),nms.join('と')+'をたべたよ'+(lk?'、だいすきなの！':'。'))}fxReply(s,a.length&&a[0].l?'happy':'neutral',3);return true}
+ if(FX_MOOD.test(txt)&&/(为什么|为啥|why|なんで|どうして|今天|today|きょう)/i.test(txt)){fxStart(txt);const m=n.mood,rs=[];const r0=fxRecent(1)[0];
+  if(n.food<30)rs.push(L3x('肚子饿了','I am hungry','おなかがすいた'));if(n.energy<30)rs.push(L3x('有点困','I am sleepy','ねむい'));if(n.social<35)rs.push(L3x('你好久没陪我了','you have not played with me for a while','しばらくあそんでくれなかった'));if(n.fun<30)rs.push(L3x('有点无聊','I am a bit bored','ちょっとたいくつ'));
+  if(m>=60){const why=r0&&r0.emo!=='fear'&&r0.k!=='zone'?fxTell(r0):(S.pets.length?L3x('小动物陪着我','my pets are with me','ペットがいっしょだから'):L3x('你在跟我说话呀','you are talking to me','きみとおはなししてるから'));fxReply(L3x('开心！因为'+why.replace(/[！。]$/,'')+'。','Happy! Because '+why.replace(/[!.]$/,'')+'.','うれしい！だって、'+why.replace(/[！。]$/,'')+'。'),'happy',4);return true}
+  fxReply(L3x((m<35?'不太开心':'还行吧')+(rs.length?'，因为'+rs.join('，')+'。':'……说不上来为什么。'),(m<35?'Not very happy':'So-so')+(rs.length?', because '+rs.join(', ')+'.':'… I cannot say why.'),(m<35?'あまりげんきじゃない':'ふつう')+(rs.length?'。'+rs.join('、')+'から。':'……なんでかわからない。')),m<35?'sad':'neutral',4);return true}
+ if(FX_DOING.test(txt)){fxStart(txt);let s='';try{s=actText()}catch(e){}if(!s)s=fxHomeLine();fxReply(s,null,2);return true}
+ if(FX_WANT.test(txt)){fxStart(txt);const w=n.food<35?L3x('我想吃点东西…','I want to eat something…','なにかたべたいな…'):n.energy<30?L3x('我想睡觉了…','I want to sleep…','ねむりたい…'):n.social<40?L3x('我想和你说说话。','I want to talk with you.','きみとおはなししたいな。'):n.fun<50?L3x('我想玩！','I want to play!','あそびたい！'):P.trait==='活泼'?L3x('我想去海边！','I want to go to the beach!','うみにいきたい！'):P.trait==='害羞'?L3x('我想安安静静待一会儿。','I want to stay quietly for a while.','しずかにしていたいな。'):L3x('我想出去走走，或者画画。','I want to go out for a walk, or draw.','おさんぽか、おえかきしたいな。');fxReply(w,'happy',3);return true}
+ if(FX_FEAR.test(txt)){fxStart(txt);const B=(typeof bs==='function')?bs():{fear:{}};const fs=Object.keys(B.fear||{}).filter(k=>B.fear[k]>.15).slice(0,2).map(k=>{try{return bnm(k)}catch(e){return k}});const a=[L3x('黑漆漆的晚上','the dark night','くらいよる')];if(fs.length)a.push(L3x('森林里的'+fs.join('和'),'the '+fs.join(' and ')+' in the woods','もりの'+fs.join('と')));if(ps.ufear>.2)a.push(L3x('你很凶的时候','when you get very angry','きみがとてもおこるとき'));fxReply(L3x('我怕'+a.join('，还有')+'……你会在我身边吗？','I am afraid of '+a.join(', and ')+'… will you stay with me?',a.join('と、')+'がこわい……そばにいてくれる？'),'fear',4);return true}
+ if(FX_LIKE.test(txt)){fxStart(txt);const fl=(P.lf||[]).slice(0,2).map(x=>{try{return foodNm(x)}catch(e){return x}});const a=[];if(fl.length)a.push(L3x('吃'+fl.join('和'),'eating '+fl.join(' and '),fl.join('と')+'をたべること'));if(P.pk){try{a.push(L3x('小'+petDisp(P.pk),'little '+petDisp(P.pk)+'s',petDisp(P.pk)))}catch(e){}}a.push(L3x('和你在一起','being with you','きみといっしょにいること'));fxReply(L3x('我喜欢'+a.join('，'+'还有')+'！','I like '+a.join(', and ')+'!',a.join('、')+'がすき！'),'love',4);return true}
+ return false}
+/* ---------- criticism appraisal ---------- */
+const BLAME_RE=/你怎么(又|总是|老是|还|这么|把)|是不是你|又是你|你把.{1,8}(弄坏|打碎|弄丢|弄脏|摔坏)了|是你(弄|打)|怎么又|总是这样|老是这样|不听话|你太.{0,6}了[!！]|让我失望|烦死了|别吵|不许哭|不准哭|再这样.{0,8}就|说(过|了)多少(次|遍)|你(又|还)(不|没)|气死我了|你闯祸|都是你|怪你|why (are|did) you (always|so|do)|you never|stop it|how many times|bad (boy|girl|kid)|(i am|i'm) (so )?(angry|disappointed|mad)|shame on you|だめって(い|言)った|なんでいつも|いいかげんにして|なんど(いえば|も)|がっかり/i;
+const isScold=t=>INSULT.test(t)||BLAME_RE.test(t);
+const ACC_RE=/你怎么把|是不是你|又是你|你把.{1,8}(弄坏|打碎|弄丢|弄脏|摔坏)了|是你(弄|打)/;
+function critFault(txt){const f=fxs(),ps=S.psy,now=Date.now();let v=ACC_RE.test(txt||'')?.1:.5;if(f.mishap&&now-f.mishap.t<150000)v=Math.max(v,.9);if(ps.misb&&ps.misb.n>0&&now-ps.misb.t<120000)v=Math.max(v,.75);return v}
+FXAPI.mark=(k)=>{fxs().mishap={t:Date.now(),k:k||'hurt'}};
+function critPick(c,rnd){const ps=S.psy,B=ps.b5,A=B.A,E=B.E,N=B.N,C=B.C,att=ps.att,r=c.n,j=c.fault,h=c.tone==='harsh'?1:0,sc={};
+ sc.remorse=j*(1.05-.28*(r-1))*(.55+.35*C+.2*A)*(1-.6*h);
+ sc.fear=(h?.75:.18)+ps.ufear*.5+.25*N*(h?1:.4)+(j>.5&&r<=1?.12:0);
+ sc.wronged=(1-j*.7)*(.62+.06*(r-1))*(.7+.3*A)*(r>=4?.55:1);
+ sc.impatient=r>=2?clamp(.28*(r-1)*(1.1-.4*A)+.1*(1-j),0,.52):0;
+ sc.withdrawn=r>=4?.45+.2*(r-4)+.3*att.avo+.15*N:(h&&r>=2?.2*att.avo+.15*N:0);
+ sc.angry=(r>=3?.22+.1*(r-3):0)*(E*.6+(1-A)*.4)*(1+.5*(1-j))+(1-j)*.08*(1-A)+h*.1*(1-A);
+ sc.sad=(.18+.3*A+.2*N)*(r>=2?.8:.6)*(h?1.2:1)*(att.anx>.3?1.15:1);
+ if(FXAPI.rnd==null){const w=.12*(.5+N);for(const k in sc)sc[k]*=1+(Math.random()-.5)*w*2}
+ let best='sad',bv=-1;for(const k in sc){if(sc[k]>bv){bv=sc[k];best=k}}
+ if((best==='withdrawn'||best==='impatient')&&r>=4&&rnd<.35*(E*.6+(1-A)*.4)*(1-att.sec*.3))best='angry';
+ return{k:best,i:clamp(bv,.15,1),sc}}
+FXAPI.critPick=critPick;FXAPI.critFault=critFault;
+const CL={remorse:[['对不起…我下次不会了。','I am sorry… I will not do it again.','ごめんなさい…もうしないよ。'],'remorse'],
+ wronged:[['不是我…我没有……','It was not me… I did not…','ぼくじゃない…やってないよ……'],'wronged'],
+ impatient:[['我都知道错了嘛…','I already know I was wrong, okay…','もうわるかったってわかってるよ…'],'impatient'],
+ withdrawn:[['……（捂住耳朵，不说话）','…(covers ears, says nothing)','……（みみをふさいでだまっている）'],'sad'],
+ angry:[['我不要！你老是凶我！','No! You always yell at me!','やだ！いつもおこるんだもん！'],'angry'],
+ fear:[['呜…你好凶…我怕……','Wah… you are so scary… I am scared…','うぅ…こわい…こわいよ……'],'fear'],
+ sad:[['呜……（小声哭）','Hic… (cries quietly)','ひっく……（そっとなく）'],'sad']};
+const CD={remorse:['我做错事被说了，我知道错了，下次一定记住。','I did something wrong and got told off. I know I was wrong and I will remember.','わるいことをしてしかられた。まちがってたってわかった。つぎはおぼえてる。'],
+ wronged:['不是我的错，可是被说了，好委屈。','It was not my fault but I got blamed. I felt so wronged.','ぼくのせいじゃないのにおこられた。くやしかった。'],
+ impatient:['同一件事说了好几遍，我都知道了嘛，有点烦。','I got told the same thing again and again. I already know! A bit annoyed.','おなじことをなんどもいわれた。もうわかってるのに。ちょっといや。'],
+ withdrawn:['一直被说，我不想听了，躲起来了。','I kept getting scolded. I did not want to listen and I hid.','ずっとおこられて、もうききたくなくて、かくれた。'],
+ angry:['一直被凶，我生气了。','I kept getting yelled at, and I got angry.','おこられつづけて、おこった。'],
+ fear:['被凶了，我好怕。','Someone yelled at me. I was so scared.','おおきなこえでおこられて、こわかった。'],
+ sad:['被说了，我哭了。','I got scolded and I cried.','おこられて、ないちゃった。']};
+const LGM={remorse:'apol',wronged:'cry',impatient:'sulk',withdrawn:'hide',angry:'defy',fear:'hide',sad:'cry'};
+function critApply(k,I,c){const ps=S.psy,now=psyNow(),s=.6+.8*I,em=ps.em,f=fxs(),l=lf();const cl=x=>clamp(x,0,1);
+ const dur=ms=>ms*(1-ps.reg*.4)*(1+.5*ps.att.avo);
+ S.log.scold=(S.log.scold||0)+1;ps.n.scold=(ps.n.scold||0)+1;ps.lastHarmT=now;
+ const sulk=ms=>{ps.sulk=Math.max(ps.sulk,now+dur(ms));ps.goalT=0},sil=ms=>{ps.silent=Math.max(ps.silent,now+dur(ms))};
+ const hl=c.tone==='harsh'?1:0;
+ switch(k){
+  case'remorse':em.shame=cl(em.shame+.3*s);em.sad=cl(em.sad+.1*s);mood(-2*s);aff(-.2*s,'scold');ps.trust=cl(ps.trust+.008);ps.beh.comply=cl(ps.beh.comply+.08);f.under=clamp((f.under||.4)+.06,0,1);vpush('rules',.7,'自己做错了被批评，记得很牢');vpush('obey',.25,'');ps.hurt=cl(ps.hurt+.04*s);f.repair={t:Date.now(),k};break;
+  case'wronged':em.sad=cl(em.sad+.25*s);em.shame=cl(em.shame+.05);mood(-4*s);aff(-.8*s,'scold');ps.trust=cl(ps.trust-.02*s);l.sec=clamp(l.sec-.02*s,0,1);ps.hurt=cl(ps.hurt+.12*s);vpush('fair',-.4,'没做错却被责怪');sulk(70000);f.repair={t:Date.now(),k};break;
+  case'impatient':em.anger=cl(em.anger+.07*s);em.sad=cl(em.sad+.1*s);mood(-3*s);aff(-.6*s,'scold');l.sec=clamp(l.sec-.02*s,0,1);ps.trust=cl(ps.trust-.01*s);vpush('fair',-.2,'同一件事被一直说');sulk(35000);f.repair={t:Date.now(),k};break;
+  case'withdrawn':em.sad=cl(em.sad+.2*s);em.fear=cl(em.fear+.1*s);mood(-5*s);aff(-1*s,'scold');l.sec=clamp(l.sec-.04*s,0,1);ps.att.avo=clamp(ps.att.avo+.02,.05,.9);ps.hurt=cl(ps.hurt+.15*s);ps.trust=cl(ps.trust-.02*s);vpush('selfw',-.4,'一直被责备，不想说话了');sulk(150000);sil(120000);f.repair={t:Date.now(),k};break;
+  case'angry':em.anger=cl(em.anger+.35*s);mood(-4*s);aff(-1*s,'scold');ps.beh.defy=cl(ps.beh.defy+.1);ps.trust=cl(ps.trust-.02*s);l.sec=clamp(l.sec-.02*s,0,1);sulk(120000);sil(60000);f.repair={t:Date.now(),k};break;
+  case'fear':em.fear=cl(em.fear+.35*s);em.shame=cl(em.shame+(hl?.2:.05)*s);ps.ufear=cl(ps.ufear+.05*s);ps.hurt=cl(ps.hurt+.18*s);mood(-5*s);aff(-1.2*s,'scold');l.sec=clamp(l.sec-.04*s,0,1);ps.trust=cl(ps.trust-.03*s);vpush('selfw',hl?-.9:-.3,'被凶了');if(hl)vpush('fair',-.2,'');sulk(100000);sil(40000);f.repair={t:Date.now(),k};break;
+  default:em.sad=cl(em.sad+.3*s);mood(-4*s);aff(-.8*s,'scold');ps.hurt=cl(ps.hurt+.1*s);l.sec=clamp(l.sec-.02*s,0,1);sulk(80000);f.repair={t:Date.now(),k}}
+ if(hl){em.shame=cl(em.shame+.15*s);em.fear=cl(em.fear+.1*s)}
+ ps.react=LGM[k]||'shrug';ps.mem.push({t:now,k:'scold',v:-.3*s,w:.4,c:'scold:'+k+(c.fault>.5?':justified':':unjust'),j:c.fault>.5});if(ps.mem.length>40)ps.mem.shift()}
+function critReact(txt){const f=fxs(),now=Date.now(),cr=f.crit;if(now-cr.t>240000)cr.n=0;cr.n++;cr.t=now;
+ logChat('me','📢 '+txt);touch('chat');S.log.chat++;hold(3);
+ const sev=psySeverity(txt),c={n:cr.n,tone:sev.insult?'harsh':'scold',sev:sev.sev,fault:critFault(txt)};
+ const p=critPick(c,FXAPI.rnd!=null?FXAPI.rnd:Math.random());const k=FXAPI.force||p.k;FXAPI.force=null;
+ critApply(k,p.i,c);FXAPI.lastCrit={k,i:+p.i.toFixed(2),n:c.n,fault:c.fault,tone:c.tone,sc:p.sc};
+ const cl=CL[k]||CL.sad;let s=cl[0][LI()];if(k==='impatient'&&c.n>=3)s=L3x('好啦好啦我知道了……','Okay okay, I know already…','わかったってば……');if(k==='wronged'&&c.n>=2)s=L3x('可是真的不是我嘛……','But it really was not me…','ほんとにぼくじゃないもん……');
+ setTimeout(()=>{fxSay(s,cl[1],k==='withdrawn'?8:5,5200);if(k!=='withdrawn'){try{hold(4.6)}catch(e){}}emote(k==='remorse'||k==='wronged'||k==='sad'?'💧':k==='angry'||k==='impatient'?'💢':'💦');
+  if(k==='withdrawn'){try{PET.holdUntil=0;setMode('sit',22);PET.extra={tg:{},arms:(t,sd)=>[.2,1.55]};PET.faceAway=true;setTimeout(()=>{PET.faceAway=false;PET.extra=null},20000)}catch(e){}}
+  else if(k==='remorse'||k==='wronged'){try{PET.headShake=k==='wronged'?.9:0}catch(e){}}
+  const di=CD[k];if(di){diaryEv(di[0],di[1],di[2])}
+  logEv(['angry','withdrawn','fear'].includes(k)?'fight':'warn',TT('你批评了他，他'+({remorse:'知道错了，小声道歉',wronged:'觉得很委屈',impatient:'有点不耐烦',withdrawn:'不想说话了',angry:'生气了',fear:'吓到了',sad:'哭了'}[k]),'You scolded him; he '+({remorse:'knew he was wrong and apologised',wronged:'felt wronged',impatient:'got impatient',withdrawn:'withdrew and went quiet',angry:'got angry',fear:'got scared',sad:'cried'}[k]),'しかった。'+({remorse:'わるかったとあやまった',wronged:'くやしがった',impatient:'うんざりした',withdrawn:'だまりこんだ',angry:'おこった',fear:'こわがった',sad:'ないた'}[k])))},430);
+ return true}
+FXAPI.critReact=critReact;
+/* repair after a scolding: comfort works quickly and raises trust */
+{const _pc=psyComfort;psyComfort=function(kind,text){const r=_pc.apply(this,arguments);try{const f=fxs();if(f.repair&&Date.now()-f.repair.t<300000&&r!=='reject'&&(kind==='hug'||kind==='apologize'||kind==='feel')&&!S.sleeping){const ps=S.psy;ps.trust=clamp(ps.trust+.02,0,1);mood(4);lf().sec=clamp(lf().sec+.02,0,1);ps.hurt=Math.max(0,ps.hurt-.06);ps.em.shame*=.5;ps.em.sad*=.6;ps.sulk=Math.min(ps.sulk,psyNow()+8000);f.crit.n=Math.max(0,f.crit.n-2);logEv('comfort',TT('批评以后你安慰了他，他好多了','You comforted him after the scolding and he felt much better','しかったあとになぐさめて、げんきになった'));f.repair=null}}catch(e){}return r}}
+/* ---------- calm rule-teaching ---------- */
+const RULE_RE=/要(先|记得|一定)?(跟|和|给)?我?(说|讲|告诉|报告|打招呼)|之前要|以前要|前要先|不要(一个人|乱|随便|自己|太)|不能|不可以|不许|别(去|一个人|乱|太)|一定要|必须|务必|千万|记得|最好|应该|要(早点|先|及时)?(睡|洗|刷|回家|戴|收拾|收|整理|放|关|锁|小心|看|牵|温柔)|要小心|这样才|天黑了就|吃饭前|睡觉前|\b(should|must|always|never|remember to|make sure|don'?t forget|before you|tell me before|be careful|it is (better|important))\b|してね|ようにね|しなきゃ|ちゃだめ|てはいけない|おしえてね|しようね|かえろうね|あらおうね|きをつけて/i;
+const DED_RE=/深林|蘑菇|毒|狼|野兽|凶兽|悬崖|游泳|deep wood|mushroom|poison|wolf|beast|cliff|swim|おくのもり|きのこ|どく|おおかみ|がけ|およ/i;
+const NOT_Q=/[?？]|吗|嘛$|呢$|\bwhy\b|\bhow\b|なに$|どうして/i;
+function fxLoad(txt){const n=S.needs,t=S.P.trait;let load=(txt.length>34?.4:txt.length>22?.18:0)+(n.energy<30?.25:0)+(PET.mode==='play'?.18:0)+(t==='懒洋洋'?.08:0)+(/因为|所以|从而|并且|然而|because|therefore|however|でしたら|ため/.test(txt)&&txt.length>26?.15:0);return load}
+function fxRuleTopic(t){return t.replace(/[\s，。！!,.?？呀哦啊哈吧～~]/g,'').slice(0,10).toLowerCase()}
+function fxAccept(txt,reex){const f=fxs(),ps=S.psy,tr=S.P.trait;f.under=clamp((f.under||.4)+.04,0,1);f.rules.push({k:fxRuleTopic(txt),t:Date.now()});if(f.rules.length>20)f.rules.shift();
+ try{vpush('rules',.5,'大人心平气和地讲了道理');vpush('obey',.15,'')}catch(e){}ps.beh.comply=clamp(ps.beh.comply+.03,0,1);aff(.3,'care');mood(.6);ps.trust=clamp(ps.trust+.004,0,1);
+ const A=reex?[['哦～我明白啦！我会记得的。','Oh~ I get it now! I will remember.','そっか～わかった！おぼえておくね。']]:tr==='傲娇'?[['知道啦知道啦…我记住了。','I know, I know… I will remember.','わかってるってば…おぼえたよ。']]:tr==='害羞'?[['嗯…我记住了。','Mm… I will remember.','うん…おぼえたよ。']]:[['嗯，我记住了。','Okay, I will remember.','うん、おぼえたよ。'],['好～我知道啦。','Okay~ I got it.','はーい、わかった。'],['哦，原来是这样！我会记得的。','Oh, so that is why! I will remember.','そっか、そうなんだ！おぼえておくね。']];
+ const l=A[Math.floor(fxRn()*A.length)];fxReply(l[LI()],reex?'happy':'neutral',3);
+ try{logEv('learn',TT('他听懂了一条规矩：'+txt.slice(0,18),'He understood a rule: '+txt.slice(0,40),'ルールをりかいした：'+txt.slice(0,18)));if(Math.random()<.6)diaryEv('今天有人心平气和地跟我讲了规矩，我听懂了，会记得的。','Someone calmly told me a rule today. I understood it and I will remember.','きょうやさしくルールをおしえてもらった。わかったから、おぼえておく。')}catch(e){}f.pend=null}
+function ruleReact(txt){fxStart(txt);const f=fxs(),now=Date.now(),k=fxRuleTopic(txt),rr=f.rr;
+ if(rr.k===k&&now-rr.t<180000)rr.n++;else{rr.k=k;rr.n=1}rr.t=now;
+ if(rr.n>=2&&!f.pend){ // same rule again, no new reason: only mild annoyance
+  if(rr.n>=3){mood(-.6);fxReply(L3x('我知道啦……你说过好多遍了。','I know… you have said it many times.','わかってるよ…なんどもきいたよ。'),'impatient',3)}else fxReply(L3x('嗯嗯，你说过啦～','Mm-hm, you said that already~','うんうん、さっきもきいたよ～'),'neutral',2);return true}
+ if(f.pend&&now-f.pend.t<120000){ // re-explanation of something he did not understand
+  const simple=txt.length<=f.pend.len||/因为|所以|就是|意思|简单|because|so |that means|つまり|だから/i.test(txt);f.pend.tries++;
+  if(simple||fxRn()<.65||f.pend.tries>=2){fxAccept(txt,true);return true}
+  fxReply(L3x('嗯…还是有点糊涂…能再简单一点吗？','Hmm… I am still a bit confused… simpler please?','うーん…まだよくわからない…もっとかんたんにいって？'),'neutral',3);return true}
+ const load=fxLoad(txt),u=clamp(.88-load+((f.under||.4)-.4)*.5,.1,.97);const roll=FXAPI.force==='nu'?1:FXAPI.force==='ok'?0:fxRn();FXAPI.force=null;
+ const ask=(S.P.trait==='傲娇'||S.P.trait==='活泼')&&fxRn()<.12;
+ if(roll>u||ask){f.pend={t:now,len:txt.length,tries:0,txt};const sn=txt.replace(/[，。！!,.?？]/g,'').slice(0,6);
+  const A=ask&&roll<=u?[['为什么要这样呀？','Why do I have to?','どうして？']]:[['为什么呀？我不太懂…','Why? I do not quite understand…','どうして？よくわからない…'],['嗯？我没听懂，能再说简单一点吗？','Hm? I did not get it. Can you say it more simply?','ん？わからなかった。もっとかんたんにいって？'],['是不是…'+sn+'…？我有点糊涂了。','Is it… '+sn+'…? I am a little confused.','それって…'+sn+'…？ちょっとこんがらがった。']];
+  const l=A[Math.floor(fxRn()*A.length)];fxReply(l[LI()],'neutral',4);return true}
+ fxAccept(txt,false);return true}
+FXAPI.ruleReact=ruleReact;FXAPI.RULE_RE=RULE_RE;
+/* ---------- chat entry ---------- */
+const _pci0=psyChatIntent;psyChatIntent=function(txt){try{if(S&&S.psy&&!S.dead){
+  if(FX_ACTQ.test(txt)&&!FX_FUT.test(txt)&&!/(去|到).{1,8}了吗/.test(txt)){if(fxRecount(txt))return true}
+  if(fxAbout(txt))return true;if(fxFollow(txt))return true;
+  if(isScold(txt)){return critReact(txt)}
+  if(!DED_RE.test(txt)&&RULE_RE.test(txt)&&!NOT_Q.test(txt))return ruleReact(txt);
+  const f=fxs();if(f.pend&&Date.now()-f.pend.t<120000&&!isScold(txt)&&txt.length>3&&!NOT_Q.test(txt))return ruleReact(txt)}}catch(e){(window.__fxErr=window.__fxErr||[]).push(e.message)}return _pci0.apply(this,arguments)};
+window.__fxErr=[];
+/* phone UI: collapsible stat panel toggle (button is only visible on small screens via CSS) */
+(()=>{if(typeof document==='undefined')return;const n=document.getElementById('name');if(!n||document.getElementById('barsT'))return;const b=document.createElement('button');b.id='barsT';b.type='button';b.textContent='▾';b.style.display='none';b.title='stats';n.appendChild(b);
+ const small=()=>window.matchMedia('(max-width:600px),(max-height:500px) and (orientation:landscape)').matches;
+ const L=document.getElementById('L');const upd=()=>{b.style.display=small()?'block':'none';if(!small())L.classList.remove('bo')};upd();window.addEventListener('resize',upd);
+ b.addEventListener('click',e=>{e.stopPropagation();L.classList.toggle('bo');b.textContent=L.classList.contains('bo')?'▴':'▾'});
+ document.addEventListener('pointerdown',e=>{if(L.classList.contains('bo')&&!e.target.closest('#L')){L.classList.remove('bo');b.textContent='▾'}})})();
+/* ===== (H) weather: thunder only in a real thunderstorm; storms build up (clouds -> rain -> thunder); rain visuals; chat matches the real weather ===== */
+const WX={t:0,last:'',lvl:0,nextTh:0,drops:[]};
+const wxNow=()=>{try{return weatherNow()}catch(e){return'clear'}};
+const wxStorm=()=>wxNow()==='storm'&&WX.t>=60;
+function wxPhrase(){const w=wxNow();const st=WX.t;
+ if(w==='storm')return st>=60?L3x('外面在下大雨，还打雷，轰隆隆……','It is pouring outside with thunder, boom boom…','そとはおおあめで、かみなりがごろごろ……'):st>=12?L3x('外面下起大雨了，天好暗。','It has started to pour outside. So dark.','そとはおおあめになってきた。くらいな。'):L3x('乌云压过来了，快要下雨了。','Dark clouds are rolling in. It is going to rain.','くろいくもがきた。もうすぐあめがふるよ。');
+ if(w==='rain')return st>=12?L3x('外面在下雨。','It is raining outside.','そとはあめがふってるよ。'):L3x('天阴了，好像要下雨。','It is getting cloudy. It looks like rain.','くもってきた。あめがふりそう。');
+ if(w==='snow')return L3x('外面在下雪。','It is snowing outside.','そとはゆきがふってるよ。');
+ if(w==='cloud')return L3x('今天是阴天。','It is cloudy today.','きょうはくもりだよ。');return L3x('今天天气很好，出太阳了。','The weather is nice, the sun is out.','きょうははれてるよ。')}
+{const _wt=weatherText;weatherText=function(){return _wt.apply(this,arguments)+' '+wxPhrase()};
+ const _th=thunder;thunder=function(){if(!wxStorm())return;return _th.apply(this,arguments)};
+ if(typeof document!=='undefined'){const cv2=document.createElement('canvas');cv2.id='rainv';document.body.appendChild(cv2);const dm=document.createElement('div');dm.id='wxdim';document.body.appendChild(dm);const x=cv2.getContext('2d');let lt=performance.now();
+  const rs=()=>{cv2.width=innerWidth;cv2.height=innerHeight};rs();window.addEventListener('resize',rs);
+  const wxStep=(dt)=>{try{if(S&&S.P&&!S.temp){const w=wxNow();if(w!==WX.last){WX.last=w;WX.t=0;WX.nextTh=0}
+   const wet=w==='rain'||w==='storm';if(wet)WX.t+=dt;
+   const tgt=wet?clamp(WX.t/(w==='storm'?20:12),0,1):0;WX.lvl+=(tgt-WX.lvl)*Math.min(1,dt*(wet?1.2:.5));if(!wet&&WX.lvl<.01)WX.lvl=0;
+   const rainL=wet?clamp((WX.t-10)/20,0,1):WX.lvl; // clouds darken first, rain streaks come after
+   dm.style.opacity=(w==='storm'?.7:w==='rain'?.32:0)*WX.lvl;
+   x.clearRect(0,0,cv2.width,cv2.height);
+   if(rainL>.02){const N=Math.round(rainL*(w==='storm'?340:150));while(WX.drops.length<N)WX.drops.push({x:Math.random()*cv2.width,y:Math.random()*cv2.height,l:10+Math.random()*16,v:620+Math.random()*420});WX.drops.length=Math.min(WX.drops.length,N);
+    x.strokeStyle=w==='storm'?'rgba(215,232,245,.7)':'rgba(215,232,245,.5)';x.lineWidth=1.6;x.beginPath();const sl=w==='storm'?.28:.12;
+    for(const d of WX.drops){d.y+=d.v*dt;d.x-=d.v*dt*sl;if(d.y>cv2.height){d.y=-20;d.x=Math.random()*(cv2.width+200)}if(d.x<-30)d.x=cv2.width+Math.random()*60;x.moveTo(d.x,d.y);x.lineTo(d.x+d.l*sl,d.y-d.l)}x.stroke()}
+   if(w==='storm'&&WX.t>=60){if(!WX.nextTh)WX.nextTh=WX.t+8+Math.random()*20;else if(WX.t>=WX.nextTh){WX.nextTh=WX.t+22+Math.random()*50;try{thunder()}catch(e){}}}}}catch(e){(window.__fxErr=window.__fxErr||[]).push('wx '+e.message)}
+   };
+  const loop=()=>{const nw=performance.now(),dt=Math.min(.2,Math.max(0,(nw-lt)/1000));lt=nw;wxStep(dt);requestAnimationFrame(loop)};requestAnimationFrame(loop);window.__wxStep=wxStep}
+ window.WXAPI={WX,wxStorm,wxPhrase,wxNow}}
 
 /* ===== UI (parchment & dark-wood, Chinese UI; speech/diary follow chosen language) ===== */
 const $=id=>document.getElementById(id);
