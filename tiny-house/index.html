@@ -143,6 +143,12 @@ body.bleak canvas#gl{filter:saturate(.1) contrast(.85) brightness(.6) hue-rotate
 #fgcard .fgb{display:flex;gap:6px;flex-wrap:wrap}#fgcard .fgb button{flex:1;min-width:120px;border:2px solid #4a2a22;border-radius:10px;background:#f6e9c4;padding:6px 8px;font:inherit;font-size:12px;cursor:pointer;color:#4a2a22}
 #fgcard .fgb button:first-child{background:#e8b650}
 .fgbag{font-size:12px;margin:2px 0 8px;color:#5b3a2a}
+
+#bstcard{position:fixed;left:50%;top:118px;transform:translateX(-50%) translateY(-14px);z-index:31;max-width:min(92vw,440px);padding:12px 14px;opacity:0;pointer-events:none;transition:.25s}
+#bstcard.show{opacity:1;pointer-events:auto;transform:translateX(-50%)}
+#bstcard .fgt{font-size:13px;line-height:1.45;margin-bottom:8px;color:#4a2a22}
+#bstcard .fgb{display:flex;gap:6px;flex-wrap:wrap}#bstcard .fgb button{flex:1;min-width:110px;border:2px solid #4a2a22;border-radius:10px;background:#f6e9c4;padding:6px 8px;font:inherit;font-size:12px;cursor:pointer;color:#4a2a22}
+#bstcard .fgb button:first-child{background:#e8b650}
 </style></head><body>
 <div id="bgnight"></div>
 <canvas id="gl"></canvas>
@@ -523,6 +529,7 @@ function defOutfit(g,P){const l=g==='m'?['o1','o2','o3','o14','o15','o6','o4']:[
 THREE.ColorManagement.legacyMode=false;
 /* near-fade: foreground clutter between camera and focus dissolves (screen-door dither) in close world views */
 const NCU={value:0};
+THREE.Material.prototype.customProgramCacheKey=function(){return this.userData&&this.userData.noFade?'nf':'f'};
 THREE.Material.prototype.onBeforeCompile=function(sh){if(!(this.isMeshToonMaterial||this.isMeshBasicMaterial)||this.userData.noFade)return;sh.uniforms.uNC=NCU;
  sh.fragmentShader='uniform float uNC;\n'+sh.fragmentShader.replace('#include <dithering_fragment>','#include <dithering_fragment>\n if(uNC>0.0){float zn=gl_FragCoord.z*2.0-1.0;float ld=2.0*0.5*1100.0/(1100.5-zn*1099.5);if(ld<uNC){float f=clamp((ld-uNC*.55)/(uNC*.45),0.0,1.0);float th=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715))));if(f<th)discard;}}')};
 const V3=THREE.Vector3;
@@ -1237,44 +1244,54 @@ function buildShell(scene){
  R.setSeason(0,true);
  return R}
 
-/* ===== tiny person: soft flat toon 2.5D chibi (big flat face, dot eyes, stubby limbs) ===== */
+/* ===== tiny person v4.1: ~3 heads tall, small head, long limbs with knees/elbows ===== */
 function createPet(P){
  const A={};const root=new THREE.Group();A.root=root;root.scale.setScalar(PSC);
  const skinC=P.skin||0xe8bf98;const skin=TM({color:skinC});A.skinM=skin;const dark=new THREE.MeshBasicMaterial({color:0x2a1a1c});
  const hairM=TM({color:P.hair||0x3a2418});const boy=P.gender==='m';
  const sh=0x3a1b12;
- // legs
- A.legs=[];[-1,1].forEach(s=>{const lg=new THREE.Group();lg.position.set(s*.15,.66,0);root.add(lg);
-  const leg=add(lg,new THREE.CapsuleGeometry(.1,.32,6,12),skin,0,-.28,0);const shoe=sphere(lg,.15,skin,0,-.56,.07,[1,.6,1.35]);lg.userData={leg,shoe};A.legs.push(lg)});
- // torso
- const tor=new THREE.Group();tor.position.y=1.1;root.add(tor);A.torso=tor;add(root,new THREE.CylinderGeometry(.12,.15,.3,14),skin,0,1.7,0);
- A.torsoMesh=add(tor,new THREE.CapsuleGeometry(.33,.22,8,16),M(0x6b7230),0,0,0,{s:[1,1,.9]});
- A.belt=new THREE.Group();tor.add(A.belt);add(A.belt,new THREE.TorusGeometry(.375,.04,6,22),M(0x3a1b12),0,-.14,0,{r:[Math.PI/2,0,0],s:[1,.9,1],ns:1});rbox(A.belt,.3,.075,.06,.03,M(0x3a1b12),0,-.14,.36,{ns:1});
- A.skirt=new THREE.Group();tor.add(A.skirt);
+ // v4.1 proportions: ~3 heads tall, long legs/torso, slim neck; knees + elbows for agile animation
+ const HIPY=.99,KN=.46,AN=.44;A.HIPY=HIPY;
+ A.legs=[];A.shins=[];[-1,1].forEach(s=>{const lg=new THREE.Group();lg.position.set(s*.14,HIPY,0);root.add(lg);
+  const thigh=add(lg,new THREE.CapsuleGeometry(.101,.46,6,14),skin,0,-.23,0);
+  const sh=new THREE.Group();sh.position.y=-KN;lg.add(sh);
+  const shin=add(sh,new THREE.CapsuleGeometry(.1,.4,6,14),skin,0,-.2,0);const knee=shin;
+  const shoe=sphere(sh,.15,skin,0,-AN,.07,[1,.6,1.35]);
+  const proxy={};Object.defineProperty(proxy,'material',{set(m){thigh.material=m;shin.material=m;knee.material=m},get(){return thigh.material}});
+  lg.userData={leg:proxy,shoe,sh};A.legs.push(lg);A.shins.push(sh)});
+ // torso (pose group) + stretched body shell
+ const tor=new THREE.Group();tor.position.y=1.5;root.add(tor);A.torso=tor;add(root,new THREE.CylinderGeometry(.1,.125,.36,14),skin,0,2.1,0);
+ const bd=new THREE.Group();bd.scale.set(1,1.15,1);tor.add(bd);A.body=bd;
+ A.torsoMesh=add(bd,new THREE.CapsuleGeometry(.33,.22,8,16),M(0x6b7230),0,0,0,{s:[1,1,.9]});
+ A.belt=new THREE.Group();bd.add(A.belt);add(A.belt,new THREE.TorusGeometry(.375,.04,6,22),M(0x3a1b12),0,-.14,0,{r:[Math.PI/2,0,0],s:[1,.9,1],ns:1});rbox(A.belt,.3,.075,.06,.03,M(0x3a1b12),0,-.14,.36,{ns:1});
+ A.skirt=new THREE.Group();bd.add(A.skirt);
  add(A.skirt,new THREE.CylinderGeometry(.36,.56,.6,28,1,false),M(0x6b7230),0,-.3,0);add(A.skirt,new THREE.TorusGeometry(.55,.035,6,28),M(0xf2ddb0),0,-.6,0,{r:[Math.PI/2,0,0],ns:1});A.skirtTrim=A.skirt.children[1];A.skirtTrim.visible=false;
- A.shorts=new THREE.Group();tor.add(A.shorts);add(A.shorts,new THREE.CylinderGeometry(.43,.5,.3,24),M(0x6b7230),0,-.42,0);
+ A.shorts=new THREE.Group();bd.add(A.shorts);add(A.shorts,new THREE.CylinderGeometry(.43,.5,.3,24),M(0x6b7230),0,-.42,0);
+
  // outfit accessories
  A.acc={};
- const collar=add(tor,new THREE.TorusGeometry(.32,.07,8,22),M(0xf2ddb0),0,.52,0,{r:[Math.PI/2,0,0]});A.acc.collar=collar;
- const sailor=new THREE.Group();add(sailor,new THREE.BoxGeometry(.9,.05,.5),M(0xf2ddb0),0,.46,.14,{r:[.5,0,0]});sphere(sailor,.07,M(0xbd151a),0,.3,.4);tor.add(sailor);A.acc.sailor=sailor;
- const fur=new THREE.Group();add(fur,new THREE.TorusGeometry(.36,.12,8,22),M(0xf2ddb0),0,.5,0,{r:[Math.PI/2,0,0]});tor.add(fur);A.acc.fur=fur;
- const hood=new THREE.Group();sphere(hood,.4,M(0x6b7230),0,.52,-.28,[1.1,.7,.8]);tor.add(hood);A.acc.hood=hood;
- const obi=new THREE.Group();add(obi,new THREE.TorusGeometry(.44,.1,8,24),M(0xe0b54a),0,-.12,0,{r:[Math.PI/2,0,0]});rbox(obi,.3,.26,.12,.05,M(0xe0b54a),0,-.12,-.46);tor.add(obi);A.acc.obi=obi;
- const dots=new THREE.Group();for(let i=0;i<9;i++){const a=-1.1+i*.275;sphere(dots,.05,M(0xf2ddb0),Math.sin(a)*.42,.2+(i%2)*.14,Math.cos(a)*.38,[1,1,.5],{ns:1})}tor.add(dots);A.acc.dots=dots;
- const bib=new THREE.Group();rbox(bib,.5,.55,.08,.04,M(0x3f7f95),0,.0,.38);[-1,1].forEach(s=>rbox(bib,.08,.4,.08,.03,M(0x3f7f95),s*.2,.35,.32,{r:[.2,0,0]}));sphere(bib,.04,M(0xe0b54a),-.2,.2,.42);sphere(bib,.04,M(0xe0b54a),.2,.2,.42);tor.add(bib);A.acc.bib=bib;A.acc.none=new THREE.Group();
- // arms (stubby)
- A.arms=[];[-1,1].forEach(s=>{const ar=new THREE.Group();ar.position.set(s*.33,.3,.02);tor.add(ar);
-  const arm=add(ar,new THREE.CapsuleGeometry(.062,.34,6,10),skin,0,-.33,0);const sleeve=add(ar,new THREE.CapsuleGeometry(.1,.08,6,10),M(0x6b7230),0,-.12,0);const hand=sphere(ar,.18,skin,0,-.64,0);ar.userData={sleeve,s,arm,hand};A.arms.push(ar)});
+ const collar=add(bd,new THREE.TorusGeometry(.32,.07,8,22),M(0xf2ddb0),0,.52,0,{r:[Math.PI/2,0,0]});A.acc.collar=collar;
+ const sailor=new THREE.Group();add(sailor,new THREE.BoxGeometry(.9,.05,.5),M(0xf2ddb0),0,.46,.14,{r:[.5,0,0]});sphere(sailor,.07,M(0xbd151a),0,.3,.4);bd.add(sailor);A.acc.sailor=sailor;
+ const fur=new THREE.Group();add(fur,new THREE.TorusGeometry(.36,.12,8,22),M(0xf2ddb0),0,.5,0,{r:[Math.PI/2,0,0]});bd.add(fur);A.acc.fur=fur;
+ const hood=new THREE.Group();sphere(hood,.4,M(0x6b7230),0,.52,-.28,[1.1,.7,.8]);bd.add(hood);A.acc.hood=hood;
+ const obi=new THREE.Group();add(obi,new THREE.TorusGeometry(.44,.1,8,24),M(0xe0b54a),0,-.12,0,{r:[Math.PI/2,0,0]});rbox(obi,.3,.26,.12,.05,M(0xe0b54a),0,-.12,-.46);bd.add(obi);A.acc.obi=obi;
+ const dots=new THREE.Group();for(let i=0;i<9;i++){const a=-1.1+i*.275;sphere(dots,.05,M(0xf2ddb0),Math.sin(a)*.42,.2+(i%2)*.14,Math.cos(a)*.38,[1,1,.5],{ns:1})}bd.add(dots);A.acc.dots=dots;
+ const bib=new THREE.Group();rbox(bib,.5,.55,.08,.04,M(0x3f7f95),0,.0,.38);[-1,1].forEach(s=>rbox(bib,.08,.4,.08,.03,M(0x3f7f95),s*.2,.35,.32,{r:[.2,0,0]}));sphere(bib,.04,M(0xe0b54a),-.2,.2,.42);sphere(bib,.04,M(0xe0b54a),.2,.2,.42);bd.add(bib);A.acc.bib=bib;A.acc.none=new THREE.Group();
+ // arms: slim, long, with elbows (mitten hands per sketch)
+ A.arms=[];A.fore=[];[-1,1].forEach(s=>{const ar=new THREE.Group();ar.position.set(s*.35,.38,.02);tor.add(ar);
+  const arm=add(ar,new THREE.CapsuleGeometry(.064,.38,6,12),skin,0,-.19,0);const sleeve=add(ar,new THREE.CapsuleGeometry(.1,.08,6,10),M(0x6b7230),0,-.12,0);
+  const fa=new THREE.Group();fa.position.y=-.38;ar.add(fa);add(fa,new THREE.CapsuleGeometry(.062,.42,6,12),skin,0,-.21,0);
+  const hand=sphere(fa,.15,skin,0,-.49,0);ar.userData={sleeve,s,arm,hand,fa};A.arms.push(ar);A.fore.push(fa)});
  // head
- const head=new THREE.Group();head.position.y=2.44;root.add(head);A.head=head;
- const HX=1.03,HY=1.0,HZ=.97,HR=.85;head.scale.setScalar(.92);
+ const head=new THREE.Group();head.position.y=2.8;root.add(head);A.head=head;
+ const HX=1.03,HY=1.0,HZ=.97,HR=.85;head.scale.setScalar(.72);
  const hs=new THREE.Mesh(sph(HR,40,30),skin);hs.scale.set(HX,HY,HZ);hs.castShadow=true;head.add(hs);
  const sz=(x,y)=>{const a=x/(HR*HX),b=y/(HR*HY);return HR*HZ*Math.sqrt(Math.max(.05,1-a*a-b*b))};A.sz=sz;
  // ears: small round C-shaped ears that stick out at eye level (sketch)
  [-1,1].forEach(s=>{sphere(head,.15,skin,s*HR*HX*1.1,-.1,.13,[.5,1,1]);sphere(head,.075,new THREE.MeshToonMaterial({color:new THREE.Color(skinC).multiplyScalar(.8),gradientMap:TOON}),s*HR*HX*1.13,-.1,.17,[.4,1,.9],{ns:1})});
  // face
  const F=new THREE.Group();head.add(F);A.F=F;const ex=.33,ey=-.1;A.eyes={};
- const mkEye=()=>{const arr=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*ex,ey,sz(ex,ey)-.012);e.userData.s=s;F.add(e);arr.push(e)});return arr};
+ const mkEye=()=>{const arr=[];[-1,1].forEach(s=>{const e=new THREE.Group();e.position.set(s*ex,ey,sz(ex,ey)-.012);e.userData.s=s;e.scale.setScalar(1.25);F.add(e);arr.push(e)});return arr};
  A.eyes.oval=mkEye();A.eyes.oval.forEach(e=>{const m=add(e,sph(.05,14,10),dark,0,0,0,{s:[.72,1.5,.4],ns:1});e.userData.m=m});
  const arcMesh=(r,tube,rot)=>{const m=new THREE.Mesh(new THREE.TorusGeometry(r,tube,6,14,Math.PI),dark);m.rotation.z=rot;return m};
  A.eyes.happy=mkEye();A.eyes.happy.forEach(e=>e.add(arcMesh(.085,.024,0)));
@@ -1323,10 +1340,36 @@ A.mouths.smile.visible=true;
 if(hst==='long'){/* sketch: round head, short blunt fringe line, long straight hair hanging behind/beside to the hip, flat cut */
   hairM.side=THREE.DoubleSide;const RD=1.12,yb=.2*HR*HY;
   const cap=new THREE.Mesh(new THREE.SphereGeometry(HR*RD,44,26,0,Math.PI*2,0,Math.acos(yb/(HR*RD*HY))),hairM);cap.scale.set(HX,HY,HZ);cap.castShadow=true;hair.add(cap);
-  const th2=Math.acos(-.14*HR/(HR*RD*HY));[[-.62],[Math.PI-.62]].forEach(a=>{const w=new THREE.Mesh(new THREE.SphereGeometry(HR*RD*.995,26,22,a[0],1.24,0,th2),hairM);w.scale.set(HX,HY,HZ);w.castShadow=true;hair.add(w)});
-  const W0=1.04*HR*HX,W1=1.12*HR*HX,W2=1.2*HR*HX,B=-2.0*HR,e=.18*HR,sp=new THREE.Shape();
-  sp.moveTo(-W0,.35*HR);sp.lineTo(-W1,-.4*HR);sp.lineTo(-W2,B+e);sp.quadraticCurveTo(-W2,B,-W2+e,B);sp.lineTo(W2-e,B);sp.quadraticCurveTo(W2,B,W2,B+e);sp.lineTo(W1,-.4*HR);sp.lineTo(W0,.35*HR);sp.closePath();
-  const sg=new THREE.ExtrudeGeometry(sp,{depth:.5*HR,bevelEnabled:true,bevelThickness:.14,bevelSize:.12,bevelSegments:5,curveSegments:10});const sheet=new THREE.Mesh(sg,hairM);sheet.position.set(0,0,-.95*HR);sheet.castShadow=true;hair.add(sheet)}
+  /* (side wedges removed in v4.2: the outer locks now frame the face) */
+  /* v4.2 hair: soft locks (tapered tube ribbons, 3 chained segments each) following the skull, draping over shoulders */
+  const sstep=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)};
+  const LA=[-98,-74,-50,-25,0,25,50,74,98],LL=[2.16,2.36,2.28,2.5,2.4,2.52,2.26,2.4,2.14];A.locks=[];
+  const lockRoot=new THREE.Group();hair.add(lockRoot);A.lockRoot=lockRoot;
+  LA.forEach((ad,li)=>{const al=ad*Math.PI/180,sa=Math.sin(al),ca=Math.cos(al),sn2=sa*sa,L=LL[li]+.35,y0=.55-(li%2)*.03,off=(li%2)*.05;
+   const rh=.65+.2*sn2+off*.4;
+   const P=v=>{const y=y0-v,sk=(.94+off+.1*sstep(.3,1.0,v))*Math.sqrt(Math.max(.16,1-(y/.86)*(y/.86)));const u=sstep(.5,2.0,v);const rho=sk*(1-u)+rh*u;
+    return new THREE.Vector3(sa*rho*HX,y,-ca*rho*HZ)};
+   const hx=new THREE.Vector3(ca,0,sa),w0=.27*(.92+.16*Math.abs(Math.cos(li*1.7))),t0=.115+off*.4;
+   const prof=s=>{const k=s<.88?1:Math.sqrt(Math.max(0,1-Math.pow((s-.88)/.12,2)));return [w0*(1-.62*Math.pow(s,1.8))*k,t0*(1-.5*s)*k+.0001]};
+   const cuts=[0,.3,.62,1].map(f=>f*L),NS=10,mk=(k)=>{const v0=cuts[k],v1=cuts[k+1],nr=k<2?7:9,pv=P(v0),pos=[],nor=[],idx=[];
+    for(let r=0;r<nr;r++){const f=r/(nr-1),v=v0+(v1-v0)*f,s=v/L,p=P(v),p2=P(Math.min(L,v+.02)),p1=P(Math.max(0,v-.02)),T=p2.clone().sub(p1).normalize();
+     const W=hx.clone().sub(T.clone().multiplyScalar(hx.dot(T))).normalize(),N=new THREE.Vector3().crossVectors(T,W).normalize();if(N.dot(new THREE.Vector3(sa,0,-ca))<0)N.negate();
+     const pr=prof(s),a=pr[0],b=pr[1],tip=(s>=.999);
+     for(let j=0;j<NS;j++){const th=j/NS*Math.PI*2,c=Math.cos(th),sn=Math.sin(th);
+      const q=p.clone().add(W.clone().multiplyScalar(c*a)).add(N.clone().multiplyScalar(sn*b)).sub(pv);pos.push(q.x,q.y,q.z);
+      const nn=tip?T.clone():W.clone().multiplyScalar(c/Math.max(a,.02)).add(N.clone().multiplyScalar(sn/Math.max(b,.02))).normalize();nor.push(nn.x,nn.y,nn.z)}}
+    for(let r=0;r<nr-1;r++)for(let j=0;j<NS;j++){const j2=(j+1)%NS,a=r*NS+j,b=r*NS+j2,c=(r+1)*NS+j,d=(r+1)*NS+j2;idx.push(a,c,b,b,c,d)}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setIndex(idx);
+    /* make winding agree with the outward normals */
+    {const ia=idx[0],ib=idx[1],ic=idx[2],pa=new THREE.Vector3(pos[ia*3],pos[ia*3+1],pos[ia*3+2]),pb=new THREE.Vector3(pos[ib*3],pos[ib*3+1],pos[ib*3+2]),pc=new THREE.Vector3(pos[ic*3],pos[ic*3+1],pos[ic*3+2]);
+     const fn=pb.clone().sub(pa).cross(pc.clone().sub(pa)),n0=new THREE.Vector3(nor[ia*3],nor[ia*3+1],nor[ia*3+2]);if(fn.dot(n0)<0){for(let i=0;i<idx.length;i+=3){const t=idx[i+1];idx[i+1]=idx[i+2];idx[i+2]=t}g.setIndex(idx)}}
+    g.computeBoundingSphere();return {g,pv}};
+   const segs=[0,1,2].map(mk),grp=[0,1,2].map(()=>new THREE.Group());
+   const root2=new THREE.Group();root2.position.copy(segs[0].pv);lockRoot.add(root2);root2.add(grp[0]);
+   grp[1].position.copy(segs[1].pv).sub(segs[0].pv);grp[0].add(grp[1]);grp[2].position.copy(segs[2].pv).sub(segs[1].pv);grp[1].add(grp[2]);
+   segs.forEach((s,k)=>{const m=new THREE.Mesh(s.g,hairM);m.castShadow=true;grp[k].add(m)});
+   A.locks.push({r:root2,g:grp,i:li,al:al,amp:.85+.3*Math.abs(Math.sin(li*2.3)),ph:li*.55})});
+}
   if(hst==='twin'){[-1,1].forEach(s=>{[[0,0,.27],[0,-.34,.25],[0,-.62,.21]].forEach(a=>sphere(hair,a[2],hairM,s*1.12,.1+a[1],-.1,[1,1.1,1]));sphere(hair,.1,M(0xd92316),s*1.0,.36,-.06)})}
  if(hst==='bun'){sphere(hair,.38,hairM,0,1.0,-.14);sphere(hair,.1,M(0xd92316),0,.78,-.14,[1.7,.6,1.7])}
  if(hst==='bob'){add(hair,sph(.97,24,16),hairM,0,-.22,-.18,{s:[1.12,.82,.95]});[-1,1].forEach(s=>sphere(hair,.24,hairM,s*.98,-.55,.06))}
@@ -1368,7 +1411,7 @@ if(hst==='long'){/* sketch: round head, short blunt fringe line, long straight h
  {const g=ag('a8')}
  {const g=ag('a9',head);add(g,new THREE.TorusGeometry(.98,.04,6,24,Math.PI),M(0xf2ddb0),0,0,0,{r:[0,0,0]});[-1,1].forEach(s=>{sphere(g,.28,M(0xf2ddb0),s*.98,-.04,0,[.55,1,1]);sphere(g,.17,M(0xbd151a),s*1.06,-.04,0,[.4,1,1],{ns:1})})}
  // props held in front
- A.props={};const pg=new THREE.Group();pg.position.set(0,1.25,.62);root.add(pg);A.propG=pg;
+ A.props={};const pg=new THREE.Group();pg.position.set(0,1.5,.62);root.add(pg);A.propG=pg;
  {const g=new THREE.Group();rbox(g,.55,.08,.42,.03,M(0x9a1b13),0,0,0);rbox(g,.5,.07,.38,.03,M(0xf6e8c8),0,.07,0);g.rotation.x=-.9;g.visible=false;pg.add(g);A.props.read=g}
  {const g=new THREE.Group();cyl(g,.03,.03,.5,M(0xe0b54a),0,0,0,{r:[0,0,.6]});sphere(g,.05,M(0xd92316),-.15,-.12,0);g.visible=false;g.position.set(.35,.1,0);pg.add(g);A.props.draw=g}
  {const g=new THREE.Group();g.visible=false;pg.add(g);A.props.music=g}
@@ -1432,7 +1475,7 @@ const OD={
  o15:{pocket:'kang',draw:1},
  o16:{btn:4,bc:0xe0b54a,cuff:0x3a2326},o17:{btn:4,bc:0xe0b54a,hem:0x5a3422},o18:{pbib:1,lc:0xe0b54a},o19:{neck:0xe0b54a,cuff:0xe0b54a},o20:{neck:0xe0b54a},o21:{strap:1,hemT:0xe0b54a},o22:{btn:4,bc:0x7f171d,hemT:0xf2ddb0},o23:{zip:1},o24:{btn:3,bc:0xe0b54a,cuff:0xf2ddb0},o25:{neck:0xe0b54a,cuff:0xe0b54a},o26:{zip:1,cuff:0x7f171d},o27:{pbib:1},o28:{vlap:1,hemT:0xe0b54a}};
 function buildOutfitDetail(A,o,boy){
- const clear=(g)=>{while(g.children.length)g.remove(g.children[0])};clear(A.detG);A.armDet.forEach(clear);A.legDet.forEach(clear);
+ const clear=(g)=>{while(g.children.length)g.remove(g.children[0])};clear(A.detG);A.armDet.forEach(clear);A.legDet.forEach(clear);A.shinDet.forEach(clear);
  const D=OD[o.id]||{},pf=o.puff||1,g=A.detG;const kind=(boy&&o.kind==='dress')?'shorts':o.kind;
  const mt=c=>M(c),dk=M(DKW);
  // patterned materials
@@ -1476,18 +1519,18 @@ function buildOutfitDetail(A,o,boy){
  if(D.strap){[-1,1].forEach(s=>{const p=onT(s*.2,.3,pf,.01);seg3(g,[s*.18,.52,p.z-.05],[s*.2,.18,p.z+.02],.045,mt(o.top),false)})}
  if(D.sbow){const p=onT(0,.27,pf,.05);[-1,1].forEach(s=>sphere(g,.06,mt(0xbd151a),s*.07,.27,p.z+.02,[1,.7,.6]));sphere(g,.035,mt(0xbd151a),0,.27,p.z+.04)}
  // legs: cuffs, stitches, sole + toe cap
- A.legs.forEach((l,i)=>{const d=A.legDet[i];const sgn=i?1:-1;if(kind==='pants'&&(D.lc||o.id==='o2')){const c=D.lc||0xe0b54a;ring(d,.108,.032,-.5,mt(c),1,1);}
-  if(kind==='pants'&&D.stitch){for(let k=0;k<6;k++)sphere(d,.012,mt(0xe0b54a),sgn*.099,-.12-k*.07,.0,null,{ns:1})}
+ A.legs.forEach((l,i)=>{const d=A.legDet[i];const sgn=i?1:-1;if(kind==='pants'&&(D.lc||o.id==='o2')){const c=D.lc||0xe0b54a;ring(A.shinDet[i],.108,.032,-.36,mt(c),1,1);}
+  if(kind==='pants'&&D.stitch){for(let k=0;k<6;k++)sphere(d,.012,mt(0xe0b54a),sgn*.104,-.08-k*.06,.0,null,{ns:1})}
   if(kind==='shorts'&&D.lcs){ring(d,.115,.03,-.1,mt(0xe0894a),1,1,0,0)}
-  if(o.shoe&&!o.barefoot){sphere(d,.158,dk,0,-.62,.075,[1,.3,1.4],{ns:1})}});
+  if(o.shoe&&!o.barefoot){sphere(A.shinDet[i],.158,dk,0,-.5,.075,[1,.3,1.4],{ns:1})}});
  if(kind==='pants'){const p0=0}
- outline(g,.025,0x3a1b12);A.armDet.forEach(x=>outline(x,.02,0x3a1b12));A.legDet.forEach(x=>outline(x,.02,0x3a1b12))}
+ outline(g,.025,0x3a1b12);A.armDet.forEach(x=>outline(x,.02,0x3a1b12));A.legDet.forEach(x=>outline(x,.02,0x3a1b12));A.shinDet.forEach(x=>outline(x,.02,0x3a1b12))}
 function addDetails(A,boy){
- A.detG=new THREE.Group();A.torso.add(A.detG);A.armDet=A.arms.map(a=>{const g=new THREE.Group();g.position.y=0;a.add(g);return g});A.legDet=A.legs.map(l=>{const g=new THREE.Group();l.add(g);return g});
+ A.detG=new THREE.Group();A.body.add(A.detG);A.armDet=A.arms.map(a=>{const g=new THREE.Group();g.position.y=0;a.add(g);return g});A.legDet=A.legs.map(l=>{const g=new THREE.Group();l.add(g);return g});A.shinDet=A.legs.map(l=>{const g=new THREE.Group();l.userData.sh.add(g);return g});
  const so=A.setOutfit;A.setOutfit=(o)=>{A.torsoMesh.material=M(o.top);A.legs.forEach(l=>{});so(o);buildOutfitDetail(A,o,boy)};
  // mitten thumbs
- A.mitG=A.arms.map((a,i)=>{const g=new THREE.Group();g.visible=false;a.add(g);sphere(g,.06,M(0xbd151a),(i?-1:1)*.1,-.58,.1,[1,1,1]);ring(g,.09,.04,-.5,M(CRX),1,1);return g});
- A.boots=A.legs.map(l=>{const g=new THREE.Group();g.visible=false;l.add(g);cyl(g,.13,.14,.34,M(0xbd151a),0,-.4,0,null,12);cyl(g,.145,.145,.05,M(0x3a1b12),0,-.2,0,null,12);sphere(g,.17,M(0xbd151a),0,-.58,.08,[1,.6,1.4]);sphere(g,.17,M(0x3a1b12),0,-.62,.08,[1.02,.28,1.42],{ns:1});return g});
+ A.mitG=A.arms.map((a,i)=>{const g=new THREE.Group();g.visible=false;a.userData.fa.add(g);sphere(g,.06,M(0xbd151a),(i?-1:1)*.1,-.44,.1,[1,1,1]);ring(g,.09,.04,-.36,M(CRX),1,1);return g});
+ A.boots=A.legs.map(l=>{const g=new THREE.Group();g.visible=false;l.userData.sh.add(g);cyl(g,.125,.135,.34,M(0xbd151a),0,-.26,0,null,12);cyl(g,.14,.14,.05,M(0x3a1b12),0,-.09,0,null,12);sphere(g,.17,M(0xbd151a),0,-.46,.08,[1,.6,1.4]);sphere(g,.17,M(0x3a1b12),0,-.5,.08,[1.02,.28,1.42],{ns:1});return g});
  const sa=A.setAcc;A.setAcc=(id)=>{sa(id);A.mitG.forEach(g=>g.visible=id==='a3');A.boots.forEach(g=>g.visible=id==='a8')};
  // ---- hats & accessories: only structural / one meaningful detail
  const H=A.hats,AC=A.accs;
@@ -2057,42 +2100,69 @@ function aiUpdate(dt){const now=performance.now()/1000;
  // ===== pose =====
  const A=PET.A;if(!A)return;const t=now;const F=FACE[PET.emo]||FACE.neutral;const k=Math.min(1,dt*7);
  const tg={ao:F.ao,af:F.af,pitch:F.pitch||0,yaw:F.yaw||0,roll:F.roll||0,sq:F.sq||1,blush:F.blush,bobA:(F.bob||[.02,1.5])[0],bobS:(F.bob||[.02,1.5])[1],trem:F.trem||0,eyeS:F.eyeS||1,eyeY:F.eyeY||0,br0:F.br?F.br[0]:0,bry:F.br?F.br[1]:0,ms:F.ms||1};
- const sittish=m==='sit'||m==='petting'||m==='warm'||(PET.sitTarget&&PET.sitTarget>.5);
+ const crouchG=(PET.extra&&PET.extra.crouch&&!asleep&&(m==='sit'||m==='idle'||m==='look'))?PET.extra.crouch:0;const sittish=!crouchG&&(m==='sit'||m==='petting'||m==='warm'||(PET.sitTarget&&PET.sitTarget>.5));
  if(m==='sit'||m==='warm'){const e=PET.emo;if(e==='fear'){tg.af=1.5;tg.ao=.2}else if(!F.af){tg.af=.5;tg.ao=.15}}
  if(PET.extra){Object.assign(tg,PET.extra.tg||{})}
  for(const key in tg)cur[key]=lerp(cur[key],tg[key],k);
- PET.walkAmt=lerp(PET.walkAmt,moving?1:0,Math.min(1,dt*8));
+ PET.walkAmt=lerp(PET.walkAmt,moving?1:0,Math.min(1,dt*8));if(PET.tp){PET.walkAmt=PET.tp.w;if(PET.tp.ph!=null)PET.phase=PET.tp.ph}
  const sitGoal=PET.sitTarget!=null&&m==='play'?PET.sitTarget:(sittish?1:0);PET.sitAmt=lerp(PET.sitAmt,sitGoal,Math.min(1,dt*(m==='play'?9:6)));
- if(moving)PET.phase+=dt*(PET.speedNow||1.3)*4.2;
+ if(moving)PET.phase+=dt*(PET.speedNow||1.3)*3.7;PET.crouch=lerp(PET.crouch||0,crouchG,Math.min(1,dt*5));{const dy=wrapA(PET.yaw-(PET.lyaw==null?PET.yaw:PET.lyaw));PET.lyaw=PET.yaw;PET.turnV=lerp(PET.turnV||0,Math.max(-5,Math.min(5,dy/Math.max(dt,.001))),Math.min(1,dt*6))}
  const w=PET.walkAmt,sw=Math.sin(PET.phase);
  let bob=Math.sin(t*cur.bobS*2)*cur.bobA;if(PET.emo==='excited'||PET.emo==='happy')bob=Math.abs(Math.sin(t*cur.bobS))*cur.bobA;
  if(m==='sleep'){bob=Math.sin(t*1.4)*.015}
- let y=PET.y+(1-w)*bob+w*Math.abs(sw)*.1+PET.sitAmt*-.34;
+ let y=PET.y+(1-w)*bob+w*(Math.abs(Math.cos(PET.phase))*.075+(m==='stairs'?.03:0))+PET.sitAmt*-(A.HIPY-.32)+PET.crouch*-.42;
  if(PET.emo==='surprised'&&!asleep&&PET.surpriseT>0){y+=Math.min(.5,PET.surpriseT*1.2)}
  const shiver=(PET.emo==='cold'&&!asleep)?Math.sin(t*55)*.03:0;
- A.root.position.set(PET.x+shiver,y,PET.z);A.root.rotation.order='YXZ';A.root.rotation.set(PET.rx,viewYaw(dt,m),Math.sin(PET.phase)*.1*w+(cur.trem?Math.sin(t*50)*cur.trem:0));
+ A.root.position.set(PET.x+shiver,y,PET.z);A.root.rotation.order='YXZ';A.root.rotation.set(PET.rx,viewYaw(dt,m),Math.sin(PET.phase)*.025*w+(cur.trem?Math.sin(t*50)*cur.trem:0));
  const pj=m==='play'&&PET.play&&PET.play.k==='tramp'?1+Math.sin(PET.play.t*14)*.04:1;
  let sqz=1,sqx=1;if(PET.squashT>0){PET.squashT-=dt;const u=1.2-PET.squashT;const k=Math.exp(-3.2*u)*Math.cos(u*13);sqz=1-.42*k;sqx=1+.28*k}
  A.root.scale.set(PSC*sqx,PSC*cur.sq*pj*sqz,PSC*sqx);
- A.legs.forEach((l,i)=>{const s=i?1:-1;const sit=PET.sitAmt;l.rotation.x=lerp(sw*s*.75*w,-1.5,sit);l.rotation.z=s*(sit*.12)});
- A.torso.rotation.z=Math.sin(PET.phase)*.08*w;A.torso.scale.y=1+Math.sin(t*2.2)*.018*(1-w);
- A.arms.forEach((ar,i)=>{const side=i?1:-1;let out=cur.ao,fw=cur.af;const swing=Math.sin(PET.phase+(i?0:Math.PI))*.7*w;
-  if(PET.extra&&PET.extra.arms){const a=PET.extra.arms(t,side);out=a[0];fw=a[1]}
+ // ===== v4.1 agile rig: knees, elbows, torso twist/lean, weight shift, crouch =====
+ {const sit=PET.sitAmt,cr=PET.crouch||0,asl2=m==='sleep'||m==='climb'||m==='getup';const idleW=(1-w)*(1-sit)*(1-cr)*(asl2?0:1);const wsh=Math.sin(t*.55+1)*idleW;
+  const held=m==='hold',stp=(m==='stairs'&&!PET.tp)?1:0;
+  A.legs.forEach((l,i)=>{const s=i?1:-1;const ph=PET.phase+(i?0:Math.PI);const sn=Math.sin(ph);
+   let th=-sn*(.5+.2*stp)*w,kb=(.07+(.8+.35*stp)*Math.pow(Math.max(0,Math.cos(ph+.45)),1.3))*w;
+   const free=Math.max(0,wsh*s);th+=-.07*free;kb+=.16*free+.05*idleW;
+   if(held&&!PET.tp){th=Math.sin(t*3.1+i*2.1)*.22;kb=.25+Math.abs(Math.sin(t*3.1+i*2.1))*.25}
+   th=lerp(th,-1.5,sit);kb=lerp(kb,.3,sit);th=lerp(th,-1.12,cr);kb=lerp(kb,1.85,cr);
+   l.rotation.x=th;l.userData.sh.rotation.x=kb;l.rotation.z=s*(sit*.12+cr*.1)+(wsh*.025*(i?1:-1)*0);
+   l.userData.shoe.rotation.x=Math.max(-.9,Math.min(.9,-(th+kb)*.72))});
+  const tv=Math.max(-3,Math.min(3,PET.turnV||0));
+  const lean=w*.07+cr*.62+(PET.emo==='sad'||PET.emo==='sleepy'?.06:0)-(PET.emo==='proud'||PET.emo==='happy'?.03:0)+sit*.02;
+  A.torso.rotation.set(lean+Math.sin(t*2.2)*.012*(1-w),-Math.sin(PET.phase)*.2*w+tv*.03,Math.sin(PET.phase)*.05*w+wsh*.035-tv*.025);
+  A.torso.position.x=wsh*.035+Math.sin(PET.phase)*.015*w;A.torso.position.y=1.5-cr*.04;
+  A.body.scale.y=1.15*(1+Math.sin(t*2.1)*.012*(1-w));
+  A.hsw={w:w,cr:cr,tv:tv,lean:lean,wsh:wsh,sit:sit};
+  A.headLean=-lean*.8;A.headTurn=tv*.07;A.hipSw=wsh}
+ A.arms.forEach((ar,i)=>{const side=i?1:-1;let out=cur.ao,fw=cur.af,el=null;const ph=PET.phase+(i?0:Math.PI);const swing=Math.sin(ph)*.62*w;
+  if(PET.extra&&PET.extra.arms){const a=PET.extra.arms(t,side);out=a[0];fw=a[1];el=a[2]}
+  const idl=(1-w);out+=Math.sin(t*1.15+i*2)*.025*idl;fw+=Math.sin(t*.9+i*1.3)*.035*idl;
   ar.rotation.z=side*out;ar.rotation.x=-(fw-swing*(1-Math.min(1,fw)));
-  if(PET.emo==='angry'&&!PET.extra){ar.rotation.z=side*.25;ar.rotation.x=-.2}});
+  if(PET.emo==='angry'&&!PET.extra){ar.rotation.z=side*.25;ar.rotation.x=-.2}
+  const base=el!=null?el:(.14+Math.max(0,fw)*.5+Math.max(0,-Math.sin(ph))*.38*w*(1-Math.min(1,fw))+Math.sin(t*1.4+i)*.03*idl);
+  ar.userData.fa.rotation.x=-Math.max(0,Math.min(2.2,base))});
  let hy=cur.yaw*(PET.emo==='pout'||PET.emo==='disgust'||PET.emo==='shy'?1:0);
  if(PET.headShake>0){hy=Math.sin(t*16)*.55;PET.headShake-=dt}
  if(m==='idle'||m==='walk'){PET.lookT-=dt;if(PET.lookT<=0){PET.lookT=2+Math.random()*4;PET.lookYaw=(Math.random()-.5)*.8}hy+=PET.lookYaw*(m==='idle'?1:.3)}
- {const asl=m==='sleep'||m==='climb'||m==='getup';const want=asl||PET.faceAway?0:(m==='play'||m==='admire'||m==='warm'||m==='petting')?.5:1;PET.htk=lerp(PET.htk==null?0:PET.htk,want,Math.min(1,dt*3));const dd=wrapA(camYaw()-(PET.vy==null?PET.yaw:PET.vy));hy+=Math.max(-.85,Math.min(.85,dd))*PET.htk}
+ {const asl=m==='sleep'||m==='climb'||m==='getup';const want=asl||PET.faceAway?0:(m==='play'||m==='admire'||m==='warm'||m==='petting')?.5:1;PET.htk=lerp(PET.htk==null?0:PET.htk,want,Math.min(1,dt*3));const dd=wrapA(camYaw()-(PET.vy==null?PET.yaw:PET.vy));hy+=Math.max(-.85,Math.min(.85,dd))*PET.htk;hy+=(A.headTurn||0)}
  const nod=PET.emo==='sleepy'?Math.sin(t*1.1)*.1:0;
- A.head.rotation.set(cur.pitch+nod+(PET.chew>0?Math.sin(t*14)*.04:0),hy,cur.roll*(PET.emo==='happy'||PET.emo==='love'?Math.sin(t*2.5):1)+(PET.emo==='sleepy'?Math.sin(t*.9)*.05:0));
+ A.head.rotation.set((A.headLean||0)+cur.pitch+nod+(PET.chew>0?Math.sin(t*14)*.04:0),hy,cur.roll*(PET.emo==='happy'||PET.emo==='love'?Math.sin(t*2.5):1)+(PET.emo==='sleepy'?Math.sin(t*.9)*.05:0));
  A.head.position.x=cur.trem?Math.sin(t*60)*cur.trem*2:0;
+ if(A.locks&&A.hsw){const H=A.hsw,hr=A.head.rotation,lag=A._lg||(A._lg=[0,0,0,0]);const yr=(hr.y-(A._hy==null?hr.y:A._hy))/Math.max(dt,.001);A._hy=hr.y;
+  A._yr=lerp(A._yr||0,Math.max(-6,Math.min(6,yr)),Math.min(1,dt*10));
+  /* hair hangs mostly by gravity: counter most of the head's pitch/roll so it settles on the back instead of riding with the skull */
+  const kp=.5+.25*H.cr;A.lockRoot.rotation.set(-hr.x*kp-H.cr*.12,0,-hr.z*.6);
+  const tf=[14,9,6];for(let k=0;k<3;k++)lag[k]=lerp(lag[k],A._yr,1-Math.exp(-dt*tf[k]));
+  A.locks.forEach(L=>{for(let k=0;k<3;k++){const kk=k+1,ph=t*0+PET.phase*2-L.ph*.35-k*.7,bob=.5+.5*Math.sin(ph);
+    const back=(.008+.01*H.w*bob+.006*H.w)*kk*L.amp+Math.sin(t*1.25-L.ph*.4-k*.6)*.011*kk*(1-H.w)+H.cr*.035*kk+(H.sit>.3?.02*kk:0)-H.lean*.07*kk;
+    const side=(Math.sin(PET.phase-k*.6-L.ph*.2)*.03*H.w+lag[k]*.034+H.tv*-.02+Math.sin(t*.9+L.ph-k*.5)*.006*(1-H.w))*kk*L.amp*(L.al>0?1:1);
+    const q=L.g[k];q.rotation.x=Math.max(-.02,Math.min(.2,back));q.rotation.z=Math.max(-.16,Math.min(.16,side*(.6+.4*Math.cos(L.al))+Math.sin(L.al)*.0))}})}
  PET.blinkT-=dt;if(PET.blinkT<=0){PET.blink=.13;PET.blinkT=2.5+Math.random()*3.5}if(PET.blink>0)PET.blink-=dt;
  const bl=PET.blink>0?.1:1;
- A.eyes.oval.forEach(e=>{e.scale.set(cur.eyeS,cur.eyeS*bl,1);e.position.y=-.04+cur.eyeY});A.eyes.heart.forEach(e=>{const p=1+Math.sin(t*6)*.12;e.scale.set(p,p,1)});
+ A.eyes.oval.forEach(e=>{e.scale.set(cur.eyeS*1.25,cur.eyeS*1.25*bl,1.25);e.position.y=-.04+cur.eyeY});A.eyes.heart.forEach(e=>{const p=(1+Math.sin(t*6)*.12)*1.25;e.scale.set(p,p,1.25)});
  A.brows.forEach(b=>{const s=b.userData.s;b.position.y=.21+cur.bry;b.position.x=s*.34;b.rotation.z=s*cur.br0});
  A.blush.forEach(b=>{b.scale.set(1.2*cur.blush*.8+.05,.7*(.4+cur.blush*.6),.3)});A.blushM.opacity=clamp(cur.blush*.3,0,.6);
- A.M.scale.setScalar(cur.ms);
+ A.M.scale.setScalar(cur.ms*1.15);
  if(PET.emo==='sleepy'||PET.emo==='sleep'){const yw=(Math.sin(t*.8)+1)/2;if(PET.emo==='sleepy')A.mouths.o.scale.setScalar(.7+yw*yw*1.1)}else A.mouths.o.scale.setScalar(1);
  if(PET.chew>0){PET.chew-=dt;const o=Math.sin(t*14)>0;Object.values(A.mouths).forEach(x=>x.visible=false);A.mouths[o?'open':'smile'].visible=true;if(PET.chew<=0)applyFace(PET.emo)}
  if(PET.emo==='fear'||PET.emo==='cold')A.mouths.tremble.rotation.z=Math.sin(t*40)*.06;
@@ -2102,7 +2172,7 @@ function aiUpdate(dt){const now=performance.now()/1000;
  if(A.breath.visible)A.breath.children.forEach(b=>{const u=((t*.6+b.userData.ph)%1);b.position.set(0,-.3-u*.15,.9+u*.6);b.scale.setScalar(.6+u*1.2);b.material.opacity=.7*(1-u)});
  if(PET.surpriseT>0)PET.surpriseT-=dt;
  Object.values(A.props).forEach(p=>p.visible=false);
- if(PET.prop&&A.props[PET.prop]){A.props[PET.prop].visible=true;A.propG.position.y=1.25+Math.sin(t*3)*.02;if(PET.prop==='fan'){A.props.fan.rotation.z=Math.sin(t*11)*.4}}
+ if(PET.prop&&A.props[PET.prop]){A.props[PET.prop].visible=true;A.propG.position.y=1.5-(PET.crouch||0)*.5+Math.sin(t*3)*.02;if(PET.prop==='fan'){A.props.fan.rotation.z=Math.sin(t*11)*.4}}
  else if(PET.prop2){}
  A.propG.position.z=PET.prop==='fan'?.3:.62;
  if(!SIM)tickAnimItems(t)}
@@ -3527,7 +3597,7 @@ function forageGo(withPlayer){if(S.dead||S.sleeping||PET.fg||fg().ill)return fal
  const ok=fgNext();if(!ok){PET.fg=null;return false}
  const sea=FGS();say(TT(['去采春天的东西！','去采夏天的果子！','秋天的果子熟啦，去采！','冬天也有橡果，去捡捡看。'][sea],['I am going to forage spring things!','Time to gather summer berries!','The autumn fruit is ripe, let us pick!','There are still acorns in winter, let me look.'][sea],['はるのめぐみをさがしにいくよ！','なつのきのみをとりにいくよ！','あきのみがうれたよ、とりにいこう！','ふゆでもどんぐりがあるかも、さがしてくる。'][sea]),{ms:3000});evoke(withPlayer?'excited':'happy',2.5);fgBasket(true);PET.extra={tg:{},arms:(t,sd)=>sd>0?[.62,.95]:[.62,.95]};return true}
 function fgNext(){const T=PET.fg;if(!T)return false;for(let k=0;k<5;k++){const r=fgPickRec(T.items.length||T.myst?{x:PET.x,z:PET.z}:null);if(!r)return false;const fl=spotFloor(r.x,r.z),p=findPath(PET.x,PET.z,r.x,r.z,null,fl);if(!p){r.bad=clock().day;continue}T.cur=r;T.step=Date.now();walkTo(r.x,r.z,()=>fgArrive(r),fl);return true}return false}
-function fgArrive(r){const T=PET.fg;if(!T||T.cur!==r)return;PET.extra={tg:{},arms:(t,sd)=>sd>0?[.4,1.4+Math.sin(t*5)*.25]:[.2,.1]};PET.lookAt={x:r.x,z:r.z};setMode('sit',2.6);PET.timer=2.6;T.arrive=Date.now();T.wait=setTimeout(()=>{if(PET.fg===T&&T.cur===r)fgTake(r)},1800);
+function fgArrive(r){const T=PET.fg;if(!T||T.cur!==r)return;PET.extra={tg:{},crouch:1,arms:(t,sd)=>sd>0?[.22,.9+.4*Math.max(0,Math.sin(t*3.4)),.3+.3*Math.max(0,-Math.sin(t*3.4))]:[.4,.5,.55]};PET.lookAt={x:r.x,z:r.z};setMode('sit',2.6);PET.timer=2.6;T.arrive=Date.now();T.wait=setTimeout(()=>{if(PET.fg===T&&T.cur===r)fgTake(r)},1800);
  if(r.x<-20&&lifeWoodsRoll){lifeWoodsRoll('walk');if(PET.woods){fgAbort(true);return}}}
 function fgAbort(keep){const T=PET.fg;if(!T)return;clearTimeout(T.wait);if(keep||T.items.length)fgStore(T,true);PET.fg=null;if(PET.extra&&PET.extra.arms&&!PET.fishing)PET.extra=null;fgBasket(false)}
 function fgStore(T,quiet){fg();T.items.forEach(id=>{fgAdd(id,1);S.fg.mine[id]=(S.fg.mine[id]||0)+1});if(T.myst&&!S.fg.myst)S.fg.myst={t:Date.now(),n:T.myst,asked:0};T.items=[];T.myst=0}
@@ -3540,7 +3610,7 @@ function fgTake(r){const T=PET.fg;if(!T||T.cur!==r)return;T.cur=null;T.arrive=0;
  if(T.n===1||Math.random()<.25){say((r.k==='shell'?'':'')+TT('找到'+fgRnm(r)+'啦！','Found '+fgRnm(r)+'!',fgRnm(r)+'みつけた！')+' '+_tr(FGT),{ms:3400})}
  fgMore()}
 function fgMore(){const T=PET.fg;if(!T)return;T.left--;if(T.left>0&&Date.now()-T.t0<150000&&fgNext())return;fgHome()}
-function fgHome(){const T=PET.fg;if(!T)return;const sp=freeSpot(1.5,'in');T.cur=null;PET.lookAt=null;PET.extra={tg:{},arms:(t,sd)=>[.62,.95]};if(!walkTo(sp.x,sp.z,()=>fgDeposit())){fgDeposit()}}
+function fgHome(){const T=PET.fg;if(!T)return;const sp=freeSpot(1.5,'in');T.cur=null;PET.lookAt=null;PET.extra={tg:{},arms:(t,sd)=>[.55,.95,.9]};if(!walkTo(sp.x,sp.z,()=>fgDeposit())){fgDeposit()}}
 function fgDeposit(){const T=PET.fg;if(!T)return;const f=fg(),items=T.items.slice(),myst=T.myst,ps=S.psy,B=ps.b5;fgStore(T);PET.fg=null;PET.extra=null;fgBasket(false);setMode('look',3);
  if(items.length){const cnt={};items.forEach(i=>cnt[i]=(cnt[i]||0)+1);const list=Object.keys(cnt).map(i=>FG_IC[i]+fgNm(i)+(cnt[i]>1?'×'+cnt[i]:'')).join('、');
   say(TT('我带回来了：'+list+'！','I brought back: '+list+'!','もってかえったよ：'+list+'！')+' '+_tr(FGH),{ms:5200});evoke(S.P.trait==='害羞'?'shy':'happy',3.5);emote('🧺');mood(4);
@@ -3601,6 +3671,347 @@ const _cuPlan0=cuPlan;cuPlan=function(raw,opt){const p=_cuPlan0(raw,opt);try{if(
 const _actText0=actText;actText=function(){if(PET.fg){const T=PET.fg;const l=T.items.map(i=>FG_IC[i]).join('');return TT('我在采东西！篮子里有 '+(l||'…')+'，等下带回家给你看。','I am foraging! In my basket: '+(l||'…')+'. I will show you at home.','さいしゅうちゅう！かごのなか：'+(l||'…')+'。かえったらみせるね。')}if(S.fg&&S.fg.ill)return TT('我肚子有点疼……想坐一会儿。','My tummy hurts a bit… I want to sit for a while.','おなかがすこしいたい…すこしすわっていたい。');return _actText0()};
 const _lwr0=lifeWoodsRoll;lifeWoodsRoll=function(){const r=_lwr0.apply(this,arguments);try{if(PET.woods&&!SIM&&typeof camGo==='function'&&cam.k<.3)camGo({x:PET.x,z:PET.z,y:.6,zoom:.6,el:.55})}catch(e){}return r};
 
+/* ===== beasts.js (v4.2): fierce beasts — wolf pack, bear, wild boar (deep woods) · shark, moray eel (offshore / seabed).
+   Territory-bound, seasonal/day-night patterns, never near house/dock/home beach. Child fears them realistically;
+   scares are brief, never harmful, never gory. Safety cards: call home · stay on trails · not at night · comfort. ===== */
+const BST_ID=['wolf','bear','boar','shark','eel'];
+const BST_NAME={wolf:['狼','wolf','おおかみ'],bear:['熊','bear','くま'],boar:['野猪','wild boar','いのしし'],shark:['鲨鱼','shark','サメ'],eel:['海鳝','moray eel','ウツボ']};
+const bnm=k=>BST_NAME[k][LI()];
+const BP={fur:0x9c8f8a,char:0x3a2326,cream:0xe8d9b8,tan:0xd9a070,eye:0xe0b54a,wal:0x5b2e1e,wal2:0x865539,tooth:0xf6ecd0,blue:0x2f6f85,blueD:0x1f4f63,olive:0x928e34,moss:0x4f562a,mus:0xe0b54a};
+const bsp=(g,r,col,x,y,z,s,o)=>add(g,sph(r,12,9),M(col),x,y,z,Object.assign({s:s||[1,1,1]},o||{}));
+const bcone=(g,r,h,col,x,y,z,rot,o)=>add(g,new THREE.ConeGeometry(r,h,5),M(col),x,y,z,Object.assign({r:rot||[0,0,0]},o||{}));
+const bcyl=(g,rt,rb,h,col,x,y,z,rot,o)=>add(g,new THREE.CylinderGeometry(rt,rb,h,8),M(col),x,y,z,Object.assign({r:rot||[0,0,0]},o||{}));
+const bnm0=(o,n)=>{o.name=n;return o};
+function bstEyes(g,x,y,z,sp,r,col,brow){[-1,1].forEach(s=>{const e=bsp(g,r,col||0x2a140c,s*sp+x,y,z,[1,1.1,.55],{ns:1});e.userData.noOutline=1;if(col){const p=bsp(g,r*.5,0x2a140c,s*sp+x,y,z+r*.28,[1,1.2,.5],{ns:1});p.userData.noOutline=1}
+ const b=add(g,new THREE.BoxGeometry(r*2.6,r*.5,r*.5),M(BP.char),s*sp+x,y+r*1.7,z+.01,{r:[0,0,s*(brow||.5)],ns:1});b.userData.noOutline=1})}
+function bstFinish(g){g.traverse(o=>{if(o.isMesh&&!o.userData.keepShadow)o.castShadow=o.castShadow!==false});if(typeof outline==='function')outline(g,.03,0x3a1b12);return g}
+/* ---- wolf (faces +z) ---- */
+function bstWolfModel(){const g=new THREE.Group(),bd=bnm0(new THREE.Group(),'bd');g.add(bd);
+ bsp(bd,.52,BP.fur,0,.95,0,[.82,.78,1.4]);bsp(bd,.5,BP.char,0,1.13,-.05,[.62,.34,1.1]);bsp(bd,.3,BP.cream,0,.86,.62,[.85,.95,.9]);
+ const hd=bnm0(new THREE.Group(),'hd');hd.position.set(0,1.1,.8);bd.add(hd);
+ bsp(hd,.31,BP.fur,0,.1,.26,[1,.92,1.05]);bsp(hd,.18,BP.cream,0,.0,.6,[.85,.72,1.45]);const ns=bsp(hd,.055,BP.char,0,.07,.9,[1.2,.9,1],{ns:1});ns.userData.noOutline=1;
+ [-1,1].forEach(s=>{bcone(hd,.11,.32,BP.fur,s*.18,.46,.14,[-.2,0,-s*.28]);bcone(hd,.06,.2,BP.char,s*.18,.44,.17,[-.2,0,-s*.28],{ns:1}).userData.noOutline=1});
+ bstEyes(hd,0,.2,.5,.13,.045,BP.eye,.55);
+ const jw=bnm0(new THREE.Group(),'jw');jw.position.set(0,-.02,.45);hd.add(jw);bsp(jw,.1,BP.cream,0,-.04,.18,[.7,.35,1.2]);
+ [-1,1].forEach(s=>{const f=bcone(jw,.022,.075,BP.tooth,s*.06,.01,.3,[Math.PI,0,0],{ns:1});f.userData.noOutline=1;const f2=bcone(hd,.024,.075,BP.tooth,s*.075,-.03,.72,[Math.PI,0,0],{ns:1});f2.userData.noOutline=1});
+ const tl=bnm0(new THREE.Group(),'tl');tl.position.set(0,1.0,-.7);bd.add(tl);bsp(tl,.17,BP.fur,0,-.06,-.28,[.8,.8,1.8]);bsp(tl,.12,BP.char,0,-.12,-.66,[.8,.8,1.4]);
+ [[-.24,.45],[.24,.45],[-.24,-.45],[.24,-.45]].forEach((p,i)=>{const lg=bnm0(new THREE.Group(),'l'+i);lg.position.set(p[0],.8,p[1]);g.add(lg);bcyl(lg,.09,.07,.8,i<2?BP.fur:BP.char,0,-.4,0);bsp(lg,.1,BP.char,0,-.8,.05,[1,.65,1.35])});
+ g.userData.hy=.8;return bstFinish(g)}
+/* ---- bear (faces +z, pivot 'bd' at the hips so it can rear up) ---- */
+function bstBearModel(){const g=new THREE.Group(),bd=bnm0(new THREE.Group(),'bd');bd.position.set(0,.95,-.55);g.add(bd);const P=(x,y,z)=>[x,y-.95,z+.55];
+ const a=(r,c,x,y,z,s,o)=>{const p=P(x,y,z);return bsp(bd,r,c,p[0],p[1],p[2],s,o)};
+ a(.85,BP.wal,0,1.3,0,[.95,.9,1.25]);a(.55,BP.wal,0,1.78,.28,[1,.78,1]);a(.4,BP.wal2,0,1.1,.7,[.85,.9,.7],{ns:1});
+ const hd=bnm0(new THREE.Group(),'hd');{const p=P(0,1.62,1.1);hd.position.set(p[0],p[1],p[2])}bd.add(hd);
+ bsp(hd,.43,BP.wal,0,.0,.0,[1,.92,1]);bsp(hd,.22,BP.tan,0,-.12,.38,[.95,.8,1.1]);bsp(hd,.07,BP.char,0,-.03,.6,[1.3,.9,1],{ns:1}).userData.noOutline=1;
+ [-1,1].forEach(s=>{bsp(hd,.14,BP.wal,s*.3,.34,-.05,[1,1,.65]);bsp(hd,.07,BP.tan,s*.3,.34,.0,[1,1,.5],{ns:1}).userData.noOutline=1;bcone(hd,.03,.09,BP.tooth,s*.08,-.2,.5,[Math.PI,0,0],{ns:1}).userData.noOutline=1});
+ bstEyes(hd,0,.12,.38,.17,.05,null,.4);
+ const tl=bsp(bd,.12,BP.wal,...P(0,1.35,-1.1),[1,1,.9]);
+ [[-.42,.5],[.42,.5]].forEach((p,i)=>{const lg=bnm0(new THREE.Group(),'l'+i);const q=P(p[0],.95,p[1]);lg.position.set(q[0],q[1],q[2]);bd.add(lg);bcyl(lg,.26,.21,.95,BP.wal,0,-.47,0);bsp(lg,.24,BP.wal,0,-.95,.06,[1,.6,1.4]);[-1,0,1].forEach(k=>bcone(lg,.025,.12,BP.tooth,k*.09,-.97,.3,[Math.PI/2+.2,0,0],{ns:1}).userData.noOutline=1)});
+ [[-.42,-.6],[.42,-.6]].forEach((p,i)=>{const lg=bnm0(new THREE.Group(),'l'+(i+2));lg.position.set(p[0],.95,p[1]);g.add(lg);bcyl(lg,.28,.22,.95,BP.wal,0,-.47,0);bsp(lg,.25,BP.wal,0,-.95,.06,[1,.6,1.4])});
+ g.userData.hy=1.5;return bstFinish(g)}
+/* ---- wild boar (faces +z) ---- */
+function bstBoarModel(){const g=new THREE.Group(),bd=bnm0(new THREE.Group(),'bd');g.add(bd);
+ bsp(bd,.62,BP.wal,0,.82,0,[.82,.74,1.25]);bsp(bd,.55,BP.char,0,1.0,-.05,[.65,.4,1.1]);
+ for(let i=0;i<7;i++)bcone(bd,.07,.28,BP.char,0,1.3-Math.abs(i-3)*.03,-.55+i*.18,[-.15,0,0]);
+ const hd=bnm0(new THREE.Group(),'hd');hd.position.set(0,.82,.78);bd.add(hd);
+ bsp(hd,.37,BP.wal,0,.0,.12,[1,.92,1]);bcyl(hd,.15,.2,.3,BP.tan,0,-.08,.45,[Math.PI/2,0,0]);bsp(hd,.16,BP.tan,0,-.08,.62,[1,.9,.5]);
+ [-1,1].forEach(s=>{bsp(hd,.025,BP.char,s*.05,-.08,.7,null,{ns:1}).userData.noOutline=1;bcone(hd,.05,.34,BP.tooth,s*.17,-.04,.5,[-.9,0,-s*.35]);bcone(hd,.13,.24,BP.wal,s*.26,.3,.0,[.1,0,-s*.7]);bsp(hd,.05,BP.wal,s*.3,-.1,.4,[1,1,.6],{ns:1}).userData.noOutline=0});
+ bstEyes(hd,0,.14,.38,.16,.04,BP.eye,.6);
+ const tl=bnm0(new THREE.Group(),'tl');tl.position.set(0,.95,-.75);bd.add(tl);add(tl,new THREE.TorusGeometry(.08,.025,5,10,Math.PI*1.5),M(BP.char),0,.04,-.04,{ns:1});
+ [[-.28,.42],[.28,.42],[-.28,-.42],[.28,-.42]].forEach((p,i)=>{const lg=bnm0(new THREE.Group(),'l'+i);lg.position.set(p[0],.55,p[1]);g.add(lg);bcyl(lg,.12,.09,.55,BP.char,0,-.27,0);bsp(lg,.1,BP.tooth,0,-.55,.03,[1,.5,1.2])});
+ g.userData.hy=1.4;return bstFinish(g)}
+/* ---- shark (faces +z; body below the surface, dorsal fin breaks it) ---- */
+function bstSharkModel(){const g=new THREE.Group(),bd=bnm0(new THREE.Group(),'bd');g.add(bd);
+ bsp(bd,1,BP.blue,0,0,0,[.8,.75,2.7]);bsp(bd,.9,BP.cream,0,-.28,.15,[.72,.5,2.45],{ns:1});
+ bcone(bd,.55,1.2,BP.blue,0,.05,2.85,[Math.PI/2,0,0]);
+ const fin=bnm0(new THREE.Group(),'fin');bd.add(fin);bcone(fin,.36,1.55,BP.blueD,0,1.25,.25,[-.28,0,0]);
+ const tl=bnm0(new THREE.Group(),'tl');tl.position.set(0,0,-2.5);bd.add(tl);bcone(tl,.32,1.5,BP.blueD,0,.55,-.35,[-.9,0,0]);bcone(tl,.22,.9,BP.blueD,0,-.35,-.25,[.9,0,0]);
+ [-1,1].forEach(s=>{bcone(bd,.3,1.1,BP.blueD,s*.7,-.4,.7,[0,0,s*1.2]);const e=bsp(bd,.1,0x1a0c08,s*.5,.18,1.95,[1,1,.5],{ns:1});e.userData.noOutline=1;[-1,0,1].forEach(k=>{const l=add(bd,new THREE.BoxGeometry(.03,.3,.02),M(BP.char),s*.62,.0,1.35+k*.14,{ns:1});l.userData.noOutline=1;l.rotation.z=s*.3})});
+ for(let i=-2;i<=2;i++){bcone(bd,.04,.14,BP.tooth,i*.11,-.3,2.5-Math.abs(i)*.06,[Math.PI,0,0],{ns:1}).userData.noOutline=1}
+ const wk=new THREE.Mesh(new THREE.RingGeometry(.9,1.25,24),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide}));wk.rotation.x=-Math.PI/2;wk.name='wk';wk.userData.noOutline=1;g.add(wk);
+ g.userData.hy=0;g.scale.setScalar(1.15);return bstFinish(g)}
+/* ---- moray eel + rocks (hole at the origin, eel faces +z) ---- */
+function bstEelModel(){const g=new THREE.Group();
+ [[0,0,0,1.1,.8],[-1.1,.1,.3,.8,.55],[1.0,.05,-.2,.9,.6],[.1,.0,-1.0,.9,.5]].forEach((r,i)=>{const m=add(g,new THREE.IcosahedronGeometry(1,0),M([BP.wal,BP.wal2,0x6e4430,BP.wal][i]),r[0],r[4]*.5,r[2],{s:[r[3],r[4],r[3]*.9]});m.rotation.y=i*1.3});
+ const hole=bsp(g,.45,0x120806,0,.78,.1,[1,.3,1],{ns:1});hole.userData.noOutline=1;
+ const seg=[];for(let i=0;i<9;i++){const r=i===0?.26:.2-i*.012;const m=bsp(g,r,i%2?BP.olive:BP.moss,0,.8,0,[1,1,1.4]);m.userData.seg=i;seg.push(m);if(i>0&&i%2===0){const s=bsp(g,r*.35,BP.mus,0,0,0,null,{ns:1});s.userData.spot=i;s.userData.noOutline=1}}
+ const hd=bnm0(new THREE.Group(),'hd');g.add(hd);bsp(hd,.27,BP.olive,0,0,0,[1,.85,1.5]);
+ const jw=bnm0(new THREE.Group(),'jw');jw.position.set(0,-.08,.12);hd.add(jw);bsp(jw,.2,BP.moss,0,-.02,.18,[.9,.45,1.4]);
+ [-1,1].forEach(s=>{[0,1,2].forEach(k=>{bcone(hd,.02,.07,BP.tooth,s*.1,-.1,.28+k*.1,[Math.PI,0,0],{ns:1}).userData.noOutline=1;bcone(jw,.02,.06,BP.tooth,s*.09,.04,.18+k*.1,[0,0,0],{ns:1}).userData.noOutline=1})});
+ bstEyes(hd,0,.12,.28,.15,.04,BP.mus,.5);
+ g.userData.seg=seg;g.userData.hy=0;return bstFinish(g)}
+/* ---------- state + territory ---------- */
+function bs(){if(!S.bst)S.bst={seen:{},fear:{},rules:{},sigh:{},chased:0,scares:0,heard:0,stolen:0,nm:0,nmAt:0,needC:0,lastEnc:0,avoidUntil:0,calls:0,lastHowl:0,ver:1};const b=S.bst;['seen','fear','rules','sigh'].forEach(k=>{if(!b[k])b[k]={}});return b}
+const BZX={wolf:-21,bear:-22,boar:-19.5};
+const bzIn=(k,x,z)=>{const a=(x-ISL.cx)/(ISL.wa*.88),b=(z-ISL.cz)/(ISL.wb*.88);return a*a+b*b<1&&x<=BZX[k]};
+function bzClamp(k,o){if(o.x>BZX[k])o.x=BZX[k];const a=(o.x-ISL.cx)/(ISL.wa*.88),b=(o.z-ISL.cz)/(ISL.wb*.88),q=a*a+b*b;if(q>=1){const s=.985/Math.sqrt(q);o.x=ISL.cx+(o.x-ISL.cx)*s;o.z=ISL.cz+(o.z-ISL.cz)*s}}
+const BWP={wolf:[[-28,-4],[-31,2],[-26,8],[-29,-8],[-24,-2],[-33,6]],boar:[[-24,9],[-27,5],[-22,12],[-26,-3],[-23,4]],bear:[[-29,3],[-27,-5],[-25,-9]]};
+const BDEN={wolf:[-30,-3],bear:[-27.6,-8.6],boar:[-23.5,11]};
+const bTrails=(()=>{const d={x:-4,z:2.95},G=GLADES;return[[d,G[0]],[G[0],G[1]],[G[0],G[2]],[G[1],G[3]],[G[0],G[4]]]})();
+function bstTrailDist(x,z){let m=1e9;bTrails.forEach(t=>{const a=t[0],b=t[1],dx=b.x-a.x,dz=b.z-a.z,u=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz)));m=Math.min(m,Math.hypot(x-(a.x+dx*u),z-(a.z+dz*u)))});return m}
+const BST={ready:false,w:[],bear:null,boar:null,shark:null,eel:null,last:0,pack:{st:'rest',wp:0,t:0,howl:0},chase:null,sh:{ph:0,dive:0,next:40},eelS:{ext:0,t:5,st:'hid'}};
+function bstStates(c){c=c||clock();const s=seasonOf(c),t=todOf(c),hib=HIB_FROM(c);
+ return{wolf:t==='day'?'rest':'roam',bear:hib?'hib':(t==='night'?'rest':'active'),boar:t==='night'?'rest':'active',shark:s===3?'away':(t==='night'?'deep':'surface'),eel:s===3?'hid':(t==='day'&&hashN(c.day*1.7)>.4?'hid':'out'),tod:t,season:s}}
+function bstPresent(id,c){const st=bstStates(c)[id];return st!=='away'}
+/* ---------- build / init ---------- */
+function bstInit(){if(BST.ready||typeof WILD==='undefined'||!WILD.ready||!WILD.floorY)return;BST.ready=true;const SY=WILD.seaY;
+ const wm=bstWolfModel();for(let i=0;i<4;i++){const g=i?wm.clone(true):wm;g.scale.setScalar(.82+(i?0:.08));scene.add(g);const p=BDEN.wolf;BST.w.push(bstUnit('wolf',g,p[0]+(i%2)*1.6-.8,p[1]+(i>>1)*1.6-.8))}
+ {const g=bstBearModel();scene.add(g);BST.bear=bstUnit('bear',g,BDEN.bear[0]+1.4,BDEN.bear[1]+1);g.scale.setScalar(.95);
+  const den=new THREE.Group();den.position.set(BDEN.bear[0],0,BDEN.bear[1]);bsp(den,1.9,BP.wal2,0,-.4,0,[1.15,.95,1],{ns:1});bsp(den,.9,0x120806,.1,.05,1.5,[1.1,1,.5],{ns:1}).userData.noOutline=1;[[1.6,.2,1.3],[-1.5,.1,1.2],[1.2,.15,-1.2]].forEach(r=>bsp(den,.55,0x6e4430,r[0],r[1],r[2],[1,.7,1]));bsp(den,.8,BP.moss,-.4,.7,-.5,[1.3,.4,1],{ns:1});den.traverse(o=>{if(o.isMesh)o.castShadow=o.castShadow!==false});outline(den,.03,0x3a1b12);scene.add(den);BST.den=den;
+  const zc=document.createElement('canvas');zc.width=zc.height=64;const x=zc.getContext('2d');x.font='bold 40px sans-serif';x.fillStyle='#fbe3b4';x.strokeStyle='#3a1b12';x.lineWidth=5;x.strokeText('Zz',8,46);x.fillText('Zz',8,46);
+  const zs=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(zc),transparent:true,depthWrite:false}));zs.scale.set(1.2,1.2,1);zs.visible=false;scene.add(zs);BST.zz=zs}
+ {const g=bstBoarModel();scene.add(g);BST.boar=bstUnit('boar',g,BDEN.boar[0],BDEN.boar[1]);g.scale.setScalar(.95)}
+ {const g=bstSharkModel();scene.add(g);BST.shark={g,th:3.1,y:SY-4,yaw:0,x:0,z:0,hd:0,fin:g.getObjectByName('fin'),tl:g.getObjectByName('tl'),wk:g.getObjectByName('wk')}}
+ {const g=bstEelModel();let p=WILD.ring(.33,1.4);try{const SK=(typeof R!=='undefined'&&R.stacks)||[];let bd=-1;for(let f=.26;f<=.5;f+=.03)for(let a=.9;a<=2.2;a+=.1){const q=WILD.ring(f,a);if(Math.hypot(q.x-16.5,q.z-2.3)<28)continue;const md=Math.min(99,...SK.map(k=>Math.hypot(q.x-k.x,q.z-k.z)-k.r));if(md>bd){bd=md;p=q}}}catch(e){}g.position.set(p.x,WILD.floorY,p.z);g.rotation.y=-.6;g.scale.setScalar(1.35);BST.eelPos=p;scene.add(g);BST.eel={g,seg:g.userData.seg,hd:g.getObjectByName('hd'),jw:g.getObjectByName('jw'),spots:[]};g.traverse(o=>{if(o.userData.spot)BST.eel.spots.push(o)})}}
+function bstUnit(k,g,x,z){const p={x,z};bzClamp(k,p);const u={k,g,x:p.x,z:p.z,yaw:Math.random()*6.28,tx:p.x,tz:p.z,st:'rest',t:Math.random()*4,ph:Math.random()*6,wk:0,lie:0,hp:0,rear:0,run:0,jaw:0,wi:0,
+ hd:g.getObjectByName('hd'),tl:g.getObjectByName('tl'),bd:g.getObjectByName('bd'),jw:g.getObjectByName('jw'),lg:[0,1,2,3].map(i=>g.getObjectByName('l'+i))};g.position.set(u.x,0,u.z);return u}
+function bstMove(u,tx,tz,sp,dt){const dx=tx-u.x,dz=tz-u.z,d=Math.hypot(dx,dz);if(d>.08){const st=Math.min(d,sp*dt);u.x+=dx/d*st;u.z+=dz/d*st;u.yaw+=wrapA(Math.atan2(dx,dz)-u.yaw)*Math.min(1,dt*(sp>2?8:4));const p={x:u.x,z:u.z};bzClamp(u.k,p);u.x=p.x;u.z=p.z}
+ u.run=lerp(u.run,d>.15?Math.min(1,sp/2.4):0,Math.min(1,dt*6));return d}
+function bstPose(u,dt,o){o=o||{};const k=Math.min(1,dt*6),g=u.g;u.ph+=dt*(3+u.run*9)*(u.run>.05?1:0);u.lie=lerp(u.lie,o.lie||0,k);u.hp=lerp(u.hp,o.head==null?0:o.head,k);u.rear=lerp(u.rear,o.rear||0,Math.min(1,dt*3.5));u.jaw=lerp(u.jaw,o.jaw||0,k);
+ const hy=g.userData.hy||1;g.position.set(u.x,0,u.z);g.rotation.y=u.yaw;
+ u.lg.forEach((l,i)=>{if(!l)return;const sw=Math.sin(u.ph+[0,Math.PI,Math.PI,0][i])*(.25+.55*u.run);l.rotation.x=sw*(1-u.lie)+(u.lie*(i<2?-1.25:1.25))+(o.scrape&&i===0?Math.sin(u.ph*3+1)*.9-.4:0);if(u.k==='bear'&&i<2&&u.rear>.01)l.rotation.x=lerp(l.rotation.x,-.5+Math.sin(u.ph*2+i)*.2,u.rear)});
+ if(u.bd){u.bd.position.y=(u.k==='bear'?.95:0)-u.lie*(u.k==='bear'?.55:.38)+Math.abs(Math.sin(u.ph))*.05*u.run;if(u.k==='bear')u.bd.rotation.x=-u.rear*1.05;else u.bd.rotation.x=0}
+ if(u.hd){const base=u.k==='bear'?0:0;u.hd.rotation.x=u.hp*1+(u.k==='wolf'?.1*u.run:0)+Math.sin(u.ph*.5)*.0}
+ if(u.jw)u.jw.rotation.x=u.jaw*.55;
+ if(u.tl){u.wi+=dt*(o.wag||3);u.tl.rotation.y=Math.sin(u.wi)*.25*(1-u.run*.6);u.tl.rotation.x=u.k==='wolf'?(u.run>.5?.15:-.25)+u.lie*.5:0}}
+function bstSnd(k){if(window.BST_MUTE||typeof SIM!=='undefined'&&SIM)return;try{_ac=_ac||new (window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')return;const o=_ac.createOscillator(),g=_ac.createGain(),t=_ac.currentTime;o.connect(g);g.connect(_ac.destination);
+ if(k==='wolf'){o.type='sine';o.frequency.setValueAtTime(280,t);o.frequency.linearRampToValueAtTime(560,t+.9);o.frequency.linearRampToValueAtTime(420,t+2.4);const lf2=_ac.createOscillator(),lg=_ac.createGain();lf2.frequency.value=6;lg.gain.value=14;lf2.connect(lg);lg.connect(o.frequency);lf2.start(t);lf2.stop(t+2.6);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.045,t+.5);g.gain.linearRampToValueAtTime(0,t+2.5);o.start(t);o.stop(t+2.6)}
+ else{o.type='sawtooth';o.frequency.setValueAtTime(k==='bear'?90:150,t);o.frequency.linearRampToValueAtTime(k==='bear'?60:110,t+.6);g.gain.setValueAtTime(.035,t);g.gain.linearRampToValueAtTime(0,t+.65);o.start(t);o.stop(t+.7)}}catch(e){}}
+/* ---------- per-frame animation + roaming ---------- */
+function bstFace(u,x,z,dt,k){u.yaw+=wrapA(Math.atan2(x-u.x,z-u.z)-u.yaw)*Math.min(1,dt*(k||5))}
+function bstWolves(dt,st,t){const P=BST.pack,W=BST.w,ch=BST.chase&&BST.chase.k==='wolf'?BST.chase:null,day=st.wolf==='rest';
+ W.forEach((u,i)=>{u.g.visible=ch?true:!(day&&i===3)});P.t-=dt;
+ if(ch){W.forEach((u,i)=>{if(ch.phase==='sight'){bstFace(u,PET.x,PET.z,dt);u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:.5,jaw:.35+.25*Math.sin(t*14+i),wag:.4})}
+   else if(ch.phase==='run'){bstMove(u,PET.x+(i-1.5)*.9,PET.z+(i%2?1:-1)*.9,2.5+i*.08,dt);bstPose(u,dt,{head:.3,jaw:u.run>.3?.4:0})}
+   else{bstFace(u,PET.x,PET.z,dt);u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:.45,jaw:.15,wag:.5})}});return}
+ if(P.howl>0){P.howl-=dt;W.forEach((u,i)=>{u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:-.95,jaw:.9,wag:.6})});return}
+ if(day){const d=BDEN.wolf;W.forEach((u,i)=>{const tx=d[0]+(i%2)*1.7-.9,tz=d[1]+(i>>1)*1.7-.9;const r=bstMove(u,tx,tz,.8,dt);bstPose(u,dt,{lie:r<.4?1:0,head:r<.4?.35:.1,wag:1.2})});return}
+ P.hn=(P.hn==null?20+Math.random()*60:P.hn)-dt;if(P.hn<=0){P.hn=(st.tod==='night'?70+Math.random()*110:160+Math.random()*120);bstHowl()}
+ const L=W[0];if(P.t<=0&&P.pause==null){const wp=BWP.wolf.filter(p=>bzIn('wolf',p[0],p[1]));const q=wp[Math.floor(Math.random()*wp.length)]||BDEN.wolf;P.tx=q[0];P.tz=q[1]}
+ const d0=bstMove(L,P.tx==null?L.x:P.tx,P.tz==null?L.z:P.tz,.9,dt);if(d0<.4&&P.t<=0){P.t=3+Math.random()*5;P.tx=null}
+ const idle=P.t>0&&d0<.5;
+ W.forEach((u,i)=>{if(i===0){bstPose(u,dt,{head:idle?.45:.1,wag:2});return}const c=Math.cos(L.yaw),s=Math.sin(L.yaw),o=[[-1.4,-1.3],[1.5,-1.9],[-.3,-2.8]][i-1],tx=L.x+o[0]*c+o[1]*s,tz=L.z-o[0]*s+o[1]*c;const d=bstMove(u,tx,tz,Math.min(1.7,.5+d0*.0+Math.hypot(tx-u.x,tz-u.z)*.9),dt);if(d<.5)bstFace(u,L.x+Math.sin(L.yaw)*3,L.z+Math.cos(L.yaw)*3,dt,2);bstPose(u,dt,{head:idle?.3+.1*i:.1,wag:2})})}
+function bstHowl(){const P=BST.pack;P.howl=3.4;BST.howlEv=1;bstSnd('wolf');const L=BST.w[0];if(L&&typeof emoteWorld==='function')emoteWorld(L.x,2.3,L.z,'🌙')}
+function bstBear(dt,st,t){const u=BST.bear,ch=BST.chase&&BST.chase.k==='bear'?BST.chase:null;if(!u)return;const hib=st.bear==='hib';u.g.visible=true;const D=BDEN.bear;
+ if(BST.den)BST.den.visible=true;
+ if(hib){const tx=D[0]+.5,tz=D[1]+1.7;bstMove(u,tx,tz,.7,dt);bstPose(u,dt,{lie:1,head:.6,wag:.2});u.hib=true;if(BST.zz){BST.zz.visible=true;BST.zz.position.set(u.x+.3,2.1+Math.sin(t*1.2)*.12,u.z);BST.zz.material.opacity=.7+.3*Math.sin(t*1.2)}return}
+ if(BST.zz)BST.zz.visible=false;
+ if(ch){if(ch.phase==='sight'){bstFace(u,PET.x,PET.z,dt,4);u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{rear:1,jaw:.7+.3*Math.sin(t*9),head:-.2,wag:.2});if(!ch.roar&&ch.t>.5){ch.roar=1;bstSnd('bear')}}else{bstFace(u,PET.x,PET.z,dt,3);u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{rear:ch.phase==='run'?.6:0,jaw:.2,head:.1,wag:.2})}return}
+ if(st.bear==='rest'){const r=bstMove(u,D[0]+1.2,D[1]+1.5,.5,dt);bstPose(u,dt,{lie:r<.4?1:0,head:.4});return}
+ u.t-=dt;if(!u.mode)u.mode='pick';
+ if(u.mode==='pick'){if(u.t<=0){const bu=(BST.bushes||(BST.bushes=WORLD.forage.filter(r=>r.k==='berry'&&bzIn('bear',r.x,r.z)))).filter(r=>r.on);if(bu.length&&Math.random()<.65){const r=bu[Math.floor(Math.random()*bu.length)];u.bush=r;u.tx=r.x+.7;u.tz=r.z;u.mode='go'}else{const wp=BWP.bear.filter(p=>bzIn('bear',p[0],p[1]));const q=wp[Math.floor(Math.random()*wp.length)];u.bush=null;u.tx=q[0];u.tz=q[1];u.mode='go'}}else{bstPose(u,dt,{head:.2,wag:.3});u.run=lerp(u.run,0,Math.min(1,dt*6))}}
+ if(u.mode==='go'){const r=bstMove(u,u.tx,u.tz,.55,dt);bstPose(u,dt,{head:.25,wag:.3});if(r<.3){u.mode='eat';u.t=u.bush?7+Math.random()*4:3+Math.random()*3;if(u.bush)bstFace(u,u.bush.x,u.bush.z,9,9)}}
+ else if(u.mode==='eat'){u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:u.bush?.85:.3,jaw:u.bush?.25+.2*Math.sin(t*6):0,wag:.3});if(u.t<=0){u.mode='pick';u.t=2+Math.random()*4}}}
+function bstBoar(dt,st,t){const u=BST.boar,ch=BST.chase&&BST.chase.k==='boar'?BST.chase:null;if(!u)return;u.g.visible=true;
+ if(ch){if(ch.phase==='sight'){bstFace(u,PET.x,PET.z,dt,5);u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:.8,scrape:1,jaw:0,wag:.5});if(!ch.snort&&ch.t>.6){ch.snort=1;bstSnd('boar')}}
+  else if(ch.phase==='run'){const d=Math.hypot(PET.x-u.x,PET.z-u.z);if(d>1.8&&ch.t<ch.runEnd)bstMove(u,PET.x,PET.z,3.3,dt);else u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:.55,wag:.5})}
+  else{bstFace(u,PET.x,PET.z,dt,3);u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:.4,wag:.5})}return}
+ if(st.boar==='rest'){const D=BDEN.boar;const r=bstMove(u,D[0],D[1],.7,dt);bstPose(u,dt,{lie:r<.4?1:0,head:.5});return}
+ u.t-=dt;if(!u.mode)u.mode='pick';
+ if(u.mode==='pick'){if(u.t<=0){const wp=BWP.boar.filter(p=>bzIn('boar',p[0],p[1]));const q=wp[Math.floor(Math.random()*wp.length)];u.tx=q[0]+(Math.random()-.5)*2;u.tz=q[1]+(Math.random()-.5)*2;u.mode='go'}else{u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:.3})}}
+ if(u.mode==='go'){const r=bstMove(u,u.tx,u.tz,.75,dt);bstPose(u,dt,{head:.2,wag:1});if(r<.3){u.mode='root';u.t=4+Math.random()*5}}
+ else if(u.mode==='root'){u.run=lerp(u.run,0,Math.min(1,dt*6));bstPose(u,dt,{head:.95,jaw:0,wag:1.5});if(u.t<=0){u.mode='pick';u.t=1+Math.random()*3}}}
+function bstShark(dt,st,t){const s=BST.shark,sh=BST.sh,SY=WILD.seaY;if(!s)return;const on=st.shark!=='away';s.g.visible=on;if(!on)return;
+ sh.next-=dt;if(sh.dive>0)sh.dive-=dt;else if(sh.next<=0){sh.dive=16+Math.random()*10;sh.next=45+Math.random()*50}
+ const deep=st.shark==='deep'||sh.dive>0;s.y=lerp(s.y,deep?SY-6.2:SY-1.5,Math.min(1,dt*.6));
+ sh.ph+=dt*.075;const th=Math.PI+2.15*Math.sin(sh.ph),cx=ISL.cx,cz=ISL.cz,A=50,B=42;const nx=cx+Math.cos(th)*A,nz=cz+Math.sin(th)*B;
+ if(s.x||s.z){const dx=nx-s.x,dz=nz-s.z;if(Math.hypot(dx,dz)>1e-4)s.yaw+=wrapA(Math.atan2(dx,dz)-s.yaw)*Math.min(1,dt*1.5)}s.x=nx;s.z=nz;
+ s.g.position.set(s.x,s.y,s.z);s.g.rotation.y=s.yaw;s.g.rotation.z=Math.sin(t*.6)*.05;if(s.tl)s.tl.rotation.y=Math.sin(t*2.6)*.35;
+ const up=s.y>SY-2.4;if(s.wk){s.wk.visible=up;s.wk.position.y=(SY-s.y)/1.15+.08;s.wk.scale.setScalar(1+.12*Math.sin(t*2))}s.fin.visible=true;BST.sharkUp=up}
+function bstEel(dt,st,t){const e=BST.eel,S2=BST.eelS,SY=WILD.seaY;if(!e)return;S2.t-=dt;
+ if(S2.t<=0){if(st.eel==='hid'){S2.st='in';S2.t=8+Math.random()*8}else{S2.st=S2.st==='out'?'in':'out';S2.t=S2.st==='out'?7+Math.random()*7:4+Math.random()*5}}
+ const want=st.eel==='hid'?0:(S2.st==='out'?1:0);S2.ext=lerp(S2.ext,want,Math.min(1,dt*1.1));const x=S2.ext,vis=x>.04;
+ e.seg.forEach(m=>m.visible=vis);e.hd.visible=vis;e.spots.forEach(m=>m.visible=vis);if(!vis)return;
+ const L=2.0*x,N=e.seg.length;let px=0,py=.8,pz=.1;
+ e.seg.forEach((m,i)=>{const s=1-i/(N-1);const zz=.1+s*s*L*.9,yy=.74+s*L*.55*(1-.35*s),xx=Math.sin(t*1.7+i*.75)*.1*s*x;m.position.set(xx,yy,zz);m.rotation.set(0,0,0)});
+ const h=e.seg[0],n=e.seg[1],dx=h.position.x-n.position.x,dy=h.position.y-n.position.y,dz=h.position.z-n.position.z;e.hd.position.copy(h.position);e.hd.rotation.set(-Math.atan2(dy,Math.hypot(dx,dz))+.1,Math.atan2(dx,dz)+Math.sin(t*.9)*.35*x,0);
+ e.jw.rotation.x=.18+.5*Math.max(0,Math.sin(t*2.2))*x;e.spots.forEach(m=>{const sg=e.seg[m.userData.spot];m.position.copy(sg.position);m.position.y+=sg.geometry.parameters.radius*.9})}
+function bstUpdate(t,dto){if(!BST.ready){bstInit();if(!BST.ready)return}const now=performance.now();let dt=dto!=null?dto:Math.min(.1,(now-BST.last)/1000);BST.last=now;if(dt<=0)return;
+ if(!BST.st||now-BST.stT>1000){BST.st=bstStates();BST.stT=now}const st=BST.st;
+ bstWolves(dt,st,t);bstBear(dt,st,t);bstBoar(dt,st,t);bstShark(dt,st,t);bstEel(dt,st,t)}
+const _wu_b=wildUpdate;wildUpdate=function(t){_wu_b(t);try{bstUpdate(t)}catch(e){if(!window.__bErr){window.__bErr=1;console.error('beast',e)}}};
+/* ---------- child voice ---------- */
+const bv=o=>{const t=o[S.P.trait]||o['活泼'];return t[LI()]};
+const bB=s=>s.replace(/\{b\}/g,bnm(BST.lastK||'wolf'));
+const BSV={scare:{傲娇:['才、才没有害怕……只是跑得比较快而已！','I-I was not scared… I just run fast, okay!','べ、べつにこわくなかったし…ちょっとはやくはしっただけ！'],懒洋洋:['呼…腿都软了…不想再去那里了。','Phew… my legs are jelly… I do not want to go back there.','ふぅ…あしがふにゃふにゃ…もうあそこにいきたくない。'],活泼:['好大好大的{b}！吓我一跳！下次我跑得更快！','A huge, huge {b}! What a fright! Next time I will run faster!','おおきな{b}だった！びっくりした！こんどはもっとはやくはしる！'],害羞:['（发抖）我、我好怕……你能不能待在我旁边？','(trembling) I-I was so scared… can you stay beside me?','（ふるえて）こ、こわかった…そばにいてくれる？'],挑剔:['那里一点都不安全，我再也不去了。','That place is not safe at all. I am never going again.','あそこはぜんぜんあんぜんじゃない。もういかない。'],精英:['判断失误。那片林子不该在那个时候去。已记住。','A misjudgment. I should not have gone to those woods then. Noted.','はんだんミスだった。あのもりにあのじかんにいくべきじゃなかった。おぼえた。'],温柔:['它好凶……可是它也只是住在那儿吧。我还是有点怕。','It was so fierce… but it just lives there, does it not. I am still a little scared.','こわかった…でも、そこにすんでいるだけなんだよね。まだすこしこわい。']},
+ nm:{傲娇:['才不是怕……就是做了个梦。你、你别走。','I am not scared… it was just a dream. D-do not go away.','こわくないし…ゆめをみただけ。い、いかないで。'],害羞:['（抱紧被子）我梦见{b}在追我……你在吗？','(hugging the blanket) I dreamed a {b} was chasing me… are you there?','（ふとんをぎゅっと）{b}におわれるゆめをみた…そこにいる？']},
+ nmD:['呜…我梦见{b}在追我，好黑……你在吗？','Hic… I dreamed a {b} was chasing me, it was so dark… are you there?','うう…{b}においかけられるゆめをみた、くらかった…そこにいる？'],
+ sight:{wolf:['！！有狼……好多只！','!! Wolves… so many of them!','！！おおかみ…いっぱいいる！'],boar:['野猪！它在刨地……它看见我了！','A wild boar! It is scraping the ground… it saw me!','いのしし！じめんをほってる…こっちをみた！'],bear:['是熊！好大……它站起来了！','A bear! So big… it stood up!','くま！おおきい…たちあがった！']},
+ heard:['嗷呜——……那是狼在叫吧？好远，可是还是有点怕。','Awoooo… that was wolves, wasn’t it? Far away, but still a bit scary.','アオーン…おおかみのこえ？とおいけど、ちょっとこわい。'],
+ clingy:['你能陪我一会儿吗？我心还在跳。','Can you stay with me a while? My heart is still pounding.','すこしそばにいてくれる？まだむねがどきどきしてる。'],
+ thanks:['你抱着我，我没那么怕了……谢谢。','When you hold me I am less scared… thank you.','ぎゅってしてもらったら、こわくなくなった…ありがとう。'],
+ fin:['远处水里有个三角形的鳍……是鲨鱼吧？我往后退一点。','There is a triangle fin far out in the water… a shark? I will step back a little.','とおくのみずにさんかくのひれが…サメかな？すこしさがるね。'],
+ selfcalm:['……我自己慢慢不怕了。下次想要你陪着。','…I calmed down by myself. Next time I want you with me.','…じぶんでだんだんおちついた。こんどはそばにいてほしい。']};
+const BDI={wolf:['我在深林里被狼追了，拼命跑回家，心咚咚地跳。','Wolves chased me in the deep woods. I ran home as fast as I could and my heart went thump-thump.','おくのもりでおおかみにおいかけられた。ひっしでうちにはしって、むねがどきどきした。'],
+ boar:['野猪朝我冲过来了，我吓得赶紧往家跑。','A wild boar charged at me. I ran home really fast.','いのししがつっこんできた。いそいでうちにかえった。'],
+ bear:['我在莓子丛那边看到一头熊，它站起来吼了一声。我慢慢退开，然后跑回家了。','I saw a bear near the berry bushes. It stood up and roared. I backed away slowly and then ran home.','ベリーのそばでくまにあった。たちあがってほえたので、そっとさがってからはしってかえった。'],
+ howl:['晚上听到了狼嚎，我把被子拉到鼻子那里。','I heard wolves howling at night. I pulled my blanket up to my nose.','よるにおおかみのとおぼえがきこえた。ふとんをはなまでひきあげた。'],
+ fin:['今天在码头看到远处水里有个三角形的鳍，大概是鲨鱼。我往后退了几步。','Today from the dock I saw a triangle fin far out in the water, probably a shark. I stepped back a few steps.','きょうぼうはとばからとおくのみずにさんかくのひれがみえた。たぶんサメ。すこしさがった。'],
+ basket:['我的篮子被野猪撞翻了，里面的东西都撒了。','The boar knocked over my basket and everything spilled.','いのししにかごをひっくりかえされて、なかみがちらばった。'],
+ fish:['狼叼走了我篮子里的一条鱼……我都没敢追。','A wolf took a fish from my basket… I did not dare to go after it.','おおかみにかごのさかなをくわえてかれた…おえなかった。'],
+ fishS:['有个很大的东西抢走了我钓到的鱼……是鲨鱼吗？','Something big grabbed the fish I caught… was it a shark?','おおきなものにつったさかなをとられた…サメ？'],
+ nm:['半夜做了噩梦，梦里有{b}在追我。醒来以后很想有人陪。','I had a nightmare in the night. A {b} was chasing me. I really wanted someone with me when I woke up.','よなかにこわいゆめをみた。{b}においかけられた。おきたらだれかにそばにいてほしかった。'],
+ comfort:['你抱了我，我就没那么怕了。','You held me, and I was not so scared any more.','ぎゅってしてもらって、あんまりこわくなくなった。'],
+ trail:['你教我只走小路，不乱闯。我记住了。','You taught me to stay on the trails and not wander off. I will remember.','みちからはずれないでっておしえてもらった。おぼえたよ。'],
+ night:['你说晚上不要去深林。天黑了我就待在家里。','You told me not to go to the deep woods at night. When it gets dark I will stay home.','よるはおくのもりにいかないってやくそくした。くらくなったらおうちにいる。'],
+ call:['你喊我回家，我就马上跑回来了。','You called me home and I came running right away.','よんでくれたから、すぐにはしってかえった。']};
+const bd3=k=>BDI[k][LI()].replace(/\{b\}/g,bnm(BST.lastK||'wolf'));
+const bdiary=k=>{const a=BDI[k];diaryEv(a[0].replace(/\{b\}/g,bnm0k()),a[1].replace(/\{b\}/g,bnm0k(1)),a[2].replace(/\{b\}/g,bnm0k(2)))};
+function bnm0k(i){const k=BST.lastK||'wolf';return BST_NAME[k][i==null?0:i]}
+function bstVerb(){return BST.lastK||'wolf'}
+/* ---------- cards ---------- */
+function bstCard(html,btns,ttl){if(SIM)return;let el=document.getElementById('bstcard');if(!el){el=document.createElement('div');el.id='bstcard';el.className='panel';document.body.appendChild(el)}
+ el.innerHTML=`<div class="fgt">${html}</div><div class="fgb">${btns.map((b,i)=>`<button data-i="${i}">${b[0]}</button>`).join('')}</div>`;el.classList.add('show');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{el.classList.remove('show');btns[+b.dataset.i][1]()});clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),ttl||30000)}
+function bstCardHide(){const el=document.getElementById('bstcard');if(el)el.classList.remove('show')}
+const bBtn={home:()=>'📣 '+TT('喊他回家','Call him home','よびもどす'),trail:()=>'🥾 '+TT('只走小路，别乱闯','Stay on the trails','みちからはずれない'),night:()=>'🌙 '+TT('晚上别去深林','No deep woods at night','よるはおくのもりにいかない'),comfort:()=>'🤗 '+TT('抱抱他','Comfort him','ぎゅってする')};
+function bstSafetyBtns(opt){opt=opt||{};const B=bs(),o=[];if(opt.home)o.push([bBtn.home(),()=>bstCallHome()]);if(B.needC)o.push([bBtn.comfort(),()=>{try{psyComfort('hug')}catch(e){}bstComforted()}]);if(!B.rules.trail)o.push([bBtn.trail(),()=>bstTeach('trail')]);if(!B.rules.night)o.push([bBtn.night(),()=>bstTeach('night')]);return o}
+/* ---------- rules / comfort / call home ---------- */
+function bstTeach(rule){const B=bs(),l=lf();if(B.rules[rule]){say(rule==='trail'?TT('嗯，我记得只走小路。','Yes, I remember to stay on the trails.','うん、みちからはずれないよ。'):TT('嗯，晚上我不去深林。','Yes, I do not go to the deep woods at night.','うん、よるはおくのもりにいかないよ。'),{ms:2800});return false}
+ B.rules[rule]=1;const ps=S.psy;vpush('rules',.4,rule==='trail'?'学会了只走小路':'晚上不去深林');vpush('obey',.1,'');aff(1,'care');ps.trust=clamp(ps.trust+.006,0,1);l.sec=clamp(l.sec+.02,0,1);
+ say(rule==='trail'?TT('好，我只走有脚印的小路，不乱闯。谢谢你告诉我。','Okay, I will only walk on the trails and not wander off. Thank you for telling me.','わかった、あしあとのあるみちだけあるく。おしえてくれてありがとう。'):TT('好，天黑以后我不去深林，就待在家里。','Okay, after dark I will not go to the deep woods. I will stay home.','わかった、くらくなったらおくのもりにはいかないで、おうちにいる。'),{ms:5000});evoke('happy',3);emote('💡');
+ logEv('learn',rule==='trail'?TT('你教他只走小路，避开野兽','You taught him to stay on the trails, away from beasts','けものからにげるため、みちからはずれないようおしえた'):TT('你告诉他晚上不要去深林','You told him not to go to the deep woods at night','よるはおくのもりにいかないようおしえた'));bdiary(rule);return true}
+function bstComforted(){const B=bs();if(!B.needC)return false;const ps=S.psy,l=lf();B.needC=0;ps.em.fear*=.45;ps.em.sad*=.6;for(const k in B.fear)B.fear[k]*=.75;l.sec=clamp(l.sec+.04,0,1);ps.trust=clamp(ps.trust+.015,0,1);aff(1.2,'care');
+ setTimeout(()=>{say(BSV.thanks[LI()],{ms:4200});evoke('shy',3.5);emote('💗')},700);logEv('comfort',TT('你抱着他，安慰了被野兽吓到的他','You comforted him after the beast scare','けものにおどろいたのをぎゅっとなぐさめた'));bdiary('comfort');bstCardHide();return true}
+if(typeof psyComfort==='function'){const _pc_b=psyComfort;psyComfort=function(){const r=_pc_b.apply(this,arguments);try{if(bs().needC&&r!=='reject'&&!S.sleeping&&PET.mode!=='sleep')bstComforted()}catch(e){}return r}}
+function bstCallHome(){const B=bs();if(S.dead||S.sleeping)return false;const ch=BST.chase;
+ if(ch){if(ch.called)return true;ch.called=true;if(ch.phase==='sight')ch.t=Math.max(ch.t,ch.runAt-.25);B.calls++;if(B.calls>=2)B.rules.home=1;vpush('obey',.15,'听到喊就回家');say(TT('好！我马上回来！','Okay! I am coming home right now!','うん！いますぐかえる！'),{ms:2400});bstCardHide();return true}
+ if(PET.x<-20&&PET.fl===0&&!PET.woods){const T=PET.fg;if(T)fgAbort(true);PET.lookAt=null;PET.extra=null;const hs=freeSpot(1.5,'in');B.calls++;if(B.calls>=2)B.rules.home=1;vpush('obey',.15,'听到喊就回家');
+  say(TT('好，听到你喊我了，我这就回来。','Okay, I heard you calling. I am coming back.','うん、よんでるのきこえた。いまかえるよ。'),{ms:3200});aff(.5,'care');if(!walkTo(hs.x,hs.z,()=>{bdiary('call');logEv('return',TT('他听到你的呼唤，从深林回了家','He heard your call and came home from the deep woods','よびかけをきいて、おくのもりからかえってきた'))}))return false;bstCardHide();return true}
+ say(TT('我已经在家附近啦。','I am already near home.','もうおうちのちかくにいるよ。'),{ms:2400});return false}
+/* ---------- encounters + chase ---------- */
+const BCH={wolf:{runAt:1.7,sp:2.5,pursue:1},boar:{runAt:2.2,sp:3.3,pursue:1},bear:{runAt:2.7,sp:0,pursue:0}};
+function bstSpawn(k){const base=Math.atan2(0,-1);for(let i=0;i<30;i++){const a=base+(i%2?1:-1)*Math.ceil(i/2)*.26,d=7.6+i*.12,x=PET.x+Math.cos(a)*d,z=PET.z+Math.sin(a)*d;if(bzIn(k,x,z))return{x,z}}
+ let best=null,bd=1e9;(BWP[k]||BWP.wolf).forEach(p=>{if(!bzIn(k,p[0],p[1]))return;const d=Math.hypot(p[0]-PET.x,p[1]-PET.z);if(d<bd){bd=d;best={x:p[0],z:p[1]}}});return best}
+function bstEncounter(k,opt){opt=opt||{};const B=bs();if(!BST.ready||BST.chase||S.dead||S.sleeping)return false;
+ if(!opt.force&&(PET.woods||lf().slip.state||['hold','petting','play','sleep','toBed','climb','getup','stairs'].includes(PET.mode)||PET.x>-20))return false;
+ const sp=bstSpawn(k);if(!sp)return false;BST.lastK=k;const now=Date.now(),cfg=BCH[k];
+ if(k==='wolf'){BST.w.forEach((u,i)=>{const o=[[0,0],[-1.2,-1.1],[1.3,-1.6],[-.3,-2.4]][i];const q={x:sp.x+o[0],z:sp.z+o[1]};bzClamp('wolf',q);u.x=q.x;u.z=q.z;u.g.visible=true;u.run=0;u.lie=0;u.yaw=Math.atan2(PET.x-u.x,PET.z-u.z)})}
+ else{const u=BST[k];u.x=sp.x;u.z=sp.z;u.yaw=Math.atan2(PET.x-u.x,PET.z-u.z);u.run=0;u.lie=0;u.mode='pick';u.t=3}
+ BST.chase={k,phase:'sight',t:0,runAt:cfg.runAt,runEnd:2.8,called:!!opt.called,t0:now,pursue:cfg.pursue};B.lastEnc=now;B.seen[k]=(B.seen[k]||0)+1;
+ const T=PET.fg;if(T){clearTimeout(T.wait);T.cur=null;T.arrive=0}
+ PET.path=[];PET.then=null;PET.lookAt={x:sp.x,z:sp.z};PET.faceAway=false;setMode('idle',3);PET.timer=3;evoke('surprised',1.1);PET.surpriseT=.5;emote('❗');
+ say(BSV.sight[k][LI()],{ms:2600});setTimeout(()=>{if(BST.chase)evoke('fear',14)},900);
+ try{if(!SIM&&typeof camGo==='function'&&cam.k<.3&&!cam.userMoved)camGo({x:PET.x-1.5,z:PET.z,y:.8,zoom:.55,el:.5})}catch(e){}
+ bstCard('😨 '+TT('他在深林里撞见了'+bnm(k)+'！','He ran into a '+bnm(k)+' in the deep woods!','おくのもりで'+bnm(k)+'にであった！'),bstSafetyBtns({home:true}).slice(0,3),22000);return true}
+function bstChaseTick(dt,nowMs){const ch=BST.chase;ch.t+=dt;const k=ch.k,B=bs();
+ if(S.sleeping||PET.mode==='hold'||PET.mode==='petting'){bstChaseEnd(false);return}
+ if(ch.phase==='sight'&&ch.t>=ch.runAt){ch.phase='run';ch.t=0;ch.rt=0;bstSteal(k);const T=PET.fg;if(T)fgAbort(true);PET.extra=null;PET.lookAt=null;const hs=freeSpot(1.5,'in');ch.hs=hs;PET.timer=0;evoke('fear',14);
+  const ok=walkTo(hs.x,hs.z,()=>bstHome(k),0);if(!ok){PET.x=hs.x;PET.z=hs.z;bstHome(k)}return}
+ if(ch.phase==='run'){ch.rt+=dt;const edge=BZX[k]+1.8;const nearest=Math.min(...(k==='wolf'?BST.w:[BST[k]]).map(u=>Math.hypot(PET.x-u.x,PET.z-u.z)));
+  if(PET.x>edge||ch.rt>45||nearest>16){ch.phase='watch';ch.t=0}}
+ if(ch.phase==='watch'&&ch.t>3.5){BST.chase=null;(k==='wolf'?BST.w:[BST[k]]).forEach(u=>{u.mode='pick';u.t=3});BST.pack.t=2;BST.pack.tx=null}}
+function bstChaseEnd(abort){const ch=BST.chase;if(!ch)return;BST.chase=null;bstCardHide();(ch.k==='wolf'?BST.w:[BST[ch.k]]).forEach(u=>{u.mode='pick';u.t=3});if(abort&&!S.sleeping)evoke('fear',3)}
+function bstSteal(k){const B=bs();let did=null;const T=PET.fg;
+ if(k==='boar'&&T&&(T.items.length||T.myst)&&Math.random()<.45){T.items=[];T.myst=0;did='basket'}
+ else if(k==='wolf'&&S.bag&&S.bag.g_fish>0&&Math.random()<.55){S.bag.g_fish--;did='fish'}
+ else if(k==='wolf'&&T&&T.items.includes('g_fish')){T.items.splice(T.items.indexOf('g_fish'),1);did='fish'}
+ if(!did)return;B.stolen++;BST.stolenMsg=did;
+ setTimeout(()=>{say(did==='basket'?TT('呀，我的篮子！东西都撒了……','My basket! Everything spilled…','あっ、かごが！なかみがちらばった…'):TT('我的鱼被叼走了……','They took my fish…','さかなをくわえてかれた…'),{ms:3600})},1400);
+ logEv('beast',did==='basket'?TT('野猪撞翻了他的采集篮，里面的东西撒了','A boar knocked over his basket and the contents spilled','いのししにかごをひっくりかえされた'):TT('狼叼走了他篮子里的一条鱼','A wolf took a fish from his basket','おおかみにさかなをくわえてかれた'));bdiary(did)}
+function bstScareGain(k,called){const B=bs(),ps=S.psy,V=vst().v;const base={wolf:.42,boar:.36,bear:.34,shark:.14,howl:.1}[k]||.2;
+ let g=base*(.78+.9*((ps.b5.N==null?.5:ps.b5.N)-.35)+.35*(1-V.courage)+.4*(B.fear[k]||0));if(called)g*=.82;if(B.rules.home)g*=.9;if(S.P.trait==='精英')g*=.85;if(S.P.trait==='害羞')g*=1.15;return clamp(g,.05,.8)}
+function bstHome(k){const B=bs(),ps=S.psy,l=lf(),now=Date.now(),ch=BST.chase;const called=ch?ch.called:false;BST.lastK=k;
+ if(ch)BST.chase=null;(k==='wolf'?BST.w:[BST[k]]).forEach(u=>{u.mode='pick';u.t=3});bstCardHide();
+ PET.fg=null;PET.extra=null;PET.lookAt=null;PET.woods=false;fgBasket(false);const g=bstScareGain(k,called);
+ ps.em.fear=clamp(ps.em.fear+g,0,1);ps.em.sad=clamp(ps.em.sad+g*.25,0,1);ps.ufear=clamp((ps.ufear||0)+.04,0,1);B.fear[k]=clamp((B.fear[k]||0)+g*.55,0,1);B.scares++;B.chased++;l.sec=clamp(l.sec-g*.12,0,1);
+ if(called){ps.trust=clamp(ps.trust+.01,0,1);bdiary('call')}
+ B.avoidUntil=now+600000+3600000*Math.max(...Object.values(B.fear));B.needC=now;B.nm=1;B.nmAt=0;B.nmK=k;ps.mem.push({t:now,k:'beast-'+k,v:-.5,w:.7,c:'beast'});vpush('rules',.15,'见过凶兽以后更小心');
+ setMode('sit',9);PET.timer=9;evoke('fear',10);emote('😨');say(bB(bv(BSV.scare)),{ms:6500});
+ logEv('beast',TT('他在深林里遇到了'+bnm(k)+'，被吓得跑回家','He met a '+bnm(k)+' in the deep woods and ran home scared','おくのもりで'+bnm(k)+'にであって、こわくてはしってかえった'));bdiary(k);
+ try{lifeAlertScare()}catch(e){}
+ bstCard('😨 '+TT('他吓坏了，还在发抖。安慰他，再教他怎样更安全。','He is badly shaken. Comfort him, then teach him how to stay safer.','おびえてふるえている。なぐさめて、あんぜんなほうほうをおしえよう。'),bstSafetyBtns(),90000)}
+function lifeAlertScare(){}
+function bstNightmare(){const B=bs(),ps=S.psy;if(!S.sleeping)return false;B.nm=0;B.nmAt=0;const k=B.nmK||'wolf';BST.lastK=k;wakeUp('natural');
+ setTimeout(()=>{const tn=BSV.nm[S.P.trait];say(bB((tn||BSV.nmD)[LI()]),{ms:6000});evoke('fear',8);emote('😱')},500);
+ ps.em.fear=clamp(ps.em.fear+.25,0,1);S.needs.energy=clamp(S.needs.energy-8,0,100);B.needC=Date.now();ps.mem.push({t:Date.now(),k:'nightmare',v:-.3,w:.5,c:'beast'});
+ logEv('nightmare',TT('他半夜做了噩梦，梦见'+bnm(k),'He had a nightmare about a '+bnm(k),'よなかに'+bnm(k)+'のゆめをみた'));bdiary('nm');
+ bstCard('🌙 '+TT('他做噩梦惊醒了，想要你陪陪他。','He woke from a nightmare and wants you near.','こわいゆめでおきた。そばにいてあげて。'),bstSafetyBtns(),60000);return true}
+function bstHeard(nowMs){const B=bs(),ps=S.psy;B.heard++;
+ if(S.sleeping||PET.mode==='sleep'){if(!B.nm&&Math.random()<.14*(1+(B.fear.wolf||0)*2)){B.nm=1;B.nmAt=nowMs+800+Math.random()*3000;B.nmK='wolf'}return}
+ if(BST.chase||nowMs-(B.heardSay||0)<150000)return;const N=ps.b5.N==null?.5:ps.b5.N,V=vst().v;
+ if(Math.random()<.45+(B.fear.wolf||0)*.6+.2*(N-.4)){B.heardSay=nowMs;const g=bstScareGain('howl',false);ps.em.fear=clamp(ps.em.fear+g,0,1);B.fear.wolf=clamp((B.fear.wolf||0)+g*.35,0,1);BST.lastK='wolf';evoke('fear',4);emote('😨');say(BSV.heard[LI()],{ms:5200});
+  if(B.fear.wolf>.35&&!B.needC){B.needC=nowMs;bstCard('🌙 '+TT('他听到狼嚎，有点害怕。','He heard wolves howling and is a little scared.','おおかみのとおぼえをきいてすこしこわがっている。'),bstSafetyBtns(),40000)}
+  if(!B.hLog||B.hLog!==clock().day){B.hLog=clock().day;logEv('beast',TT('夜里传来狼嚎，他有点害怕','Wolves howled in the night; he got a little scared','よるにおおかみのとおぼえがして、すこしこわがった'));bdiary('howl')}}}
+function bstRoll(ctx,r){const B=bs(),now=Date.now();if(!BST.ready||BST.chase||now-B.lastEnc<360000)return false;const c=clock(),tod=todOf(c),st=bstStates(c);
+ let pw=tod==='night'?.34:tod==='dusk'?.2:.035,pb=st.boar==='rest'?.02:tod==='dusk'?.1:.12,pr=st.bear==='active'?(r&&r.k==='berry'?.14:.03):0;
+ let m=ctx==='walk'?.22:1;const td=bstTrailDist(PET.x,PET.z);if(B.rules.trail&&td<2.6)m*=.45;if(B.rules.night&&tod!=='day')m*=.3;
+ pw*=m;pb*=m;pr*=m;const u=Math.random();if(u<pw)return bstEncounter('wolf');if(u<pw+pb)return bstEncounter('boar');if(u<pw+pb+pr)return bstEncounter('bear');return false}
+function bstSharkSight(dt,nowMs){const B=bs();if(!BST.sharkUp||!PET.fishing||S.sleeping||nowMs-(B.sharkSay||0)<240000||Math.random()>dt*.05)return;B.sharkSay=nowMs;BST.lastK='shark';const ps=S.psy,l=lf();const g=bstScareGain('shark',false);ps.em.fear=clamp(ps.em.fear+g,0,1);B.fear.shark=clamp((B.fear.shark||0)+g*.6,0,1);l.slip.wfear=clamp(l.slip.wfear+.05,0,1);B.seen.shark=(B.seen.shark||0)+1;
+ evoke('fear',3.5);emote('😨');say(BSV.fin[LI()],{ms:4800});logEv('beast',TT('他在码头看到远处有鲨鱼的鳍，往后退了几步','From the dock he saw a shark fin far out and stepped back','ふとうからとおくにサメのひれをみて、すこしさがった'));bdiary('fin')}
+function bstTick(dt,nowMs){if(S.dead||!S.P||!BST.ready)return;const B=bs(),c=clock(),st=bstStates(c);
+ for(const k in B.fear)B.fear[k]*=Math.exp(-dt/5400);
+ if(BST.chase)bstChaseTick(dt,nowMs);else{BST.rt=(BST.rt||0)-dt;if(BST.rt<=0){BST.rt=2.5;if(PET.x<-20&&PET.fl===0&&PET.fg&&['walk','sit','idle','look'].includes(PET.mode)&&!S.sleeping)bstRoll('walk')}}
+ if(BST.howlEv){BST.howlEv=0;bstHeard(nowMs)}
+ bstSharkSight(dt,nowMs);
+ if(S.sleeping||PET.mode==='sleep'){if(B.nm&&!B.nmAt)B.nmAt=nowMs+30000+Math.random()*80000;if(B.nm&&B.nmAt&&nowMs>B.nmAt&&PET.mode==='sleep')bstNightmare()}
+ if(B.needC&&!S.sleeping){const el=nowMs-B.needC;BST.cl=(BST.cl||0)-dt;if(BST.cl<=0&&el>30000&&!BST.chase&&typeof chatBusy==='function'&&!chatBusy()){BST.cl=55;if(Math.random()<.7)say(BSV.clingy[LI()],{ms:3800})}
+  if(el>720000){B.needC=0;const ps=S.psy;ps.em.fear*=.7;lf().sec=clamp(lf().sec-.02,0,1);say(BSV.selfcalm[LI()],{ms:4800});bstCardHide()}}
+ const bst=st.bear;if(B.bearSt!==bst){if(B.bearSt!=null&&!SIM){if(bst==='hib')logEv('hib',TT('熊回到洞穴开始冬眠','The bear went into its den to hibernate','くまがほらあなでとうみんをはじめた'));else if(B.bearSt==='hib')logEv('wake',TT('熊睡醒了，春天来了','The bear woke up — spring is here','くまがめをさました。はるがきた'))}B.bearSt=bst}
+ if(B.sharkSt!==st.shark&&(st.shark==='away'||B.sharkSt==='away')){if(B.sharkSt!=null&&!SIM)logEv('beast',st.shark==='away'?TT('鲨鱼游去深海过冬了','The shark swam to deeper water for winter','サメがふゆをこすためにふかいうみへいった'):TT('鲨鱼回到近海了','The shark is back offshore','サメがおきあいにもどってきた'))}B.sharkSt=st.shark}
+/* ---------- hooks into foraging / fishing / life loop / panel / calendar / chat ---------- */
+const _fgC_b=fgCands;fgCands=function(){let out=_fgC_b();try{const B=bs(),now=Date.now(),c=clock(),night=isNight(c.h),dk=ENV&&ENV.dusk>.4,V=vst().v,mf=Math.max(0,...Object.values(B.fear));
+ const brave=V.courage>.62&&!B.rules.night&&mf<.2&&!(B.avoidUntil>now);
+ out=out.filter(a=>{const r=a[0];if(r.x>=-20)return true;if(B.avoidUntil>now)return false;if(night||(dk&&(mf>.15||B.rules.night))){if(B.rules.night||!(brave&&Math.random()<.2))return false}if(B.rules.trail&&bstTrailDist(r.x,r.z)>2.8)return false;return true});
+ if(out.some(a=>a[0].x<-20)&&mf>.1)out.forEach(a=>{if(a[0].x<-20)a[1]*=Math.max(.15,1-mf*1.2)})}catch(e){}return out};
+const _fgA_b=fgArrive;fgArrive=function(r){_fgA_b(r);try{if(r&&r.x<-20&&PET.fg&&!PET.woods&&!SIM)bstRoll('arrive',r)}catch(e){}};
+if(typeof fgFishCaught==='function'){const _ffc_b=fgFishCaught;fgFishCaught=function(name){try{const B=bs(),st=bstStates();if(!/旧靴子|old boot|ふるいくつ/.test(name)&&st.shark==='surface'&&BST.sharkUp&&!SIM&&Math.random()<.12){B.stolen++;BST.lastK='shark';const ps=S.psy,g=bstScareGain('shark',false)*.7;ps.em.fear=clamp(ps.em.fear+g,0,1);B.fear.shark=clamp((B.fear.shark||0)+g*.5,0,1);evoke('surprised',1.2);setTimeout(()=>{say(BSV.fishS[LI()],{ms:4200});evoke('fear',3)},900);logEv('beast',TT('一个大影子抢走了他钓到的鱼，可能是鲨鱼','A big shadow snatched the fish he caught — maybe the shark','おおきなかげにつったさかなをとられた、サメかも'));bdiary('fishS');return}}catch(e){}return _ffc_b(name)}}
+const _lt_b=lifeTick;lifeTick=function(dt,nowMs,sim){_lt_b(dt,nowMs,sim);if(!sim){try{bstTick(dt,nowMs)}catch(e){if(!window.__bstErr){window.__bstErr=1;console.error('bstTick',e)}}}};
+function bstInfo(){const st=bstStates(),W=TT;const n=k=>bnm(k);
+ const wolf=st.wolf==='roam'?W('在林子深处游荡，会嚎叫','roam the deep woods and howl','おくのもりをうろつき、とおぼえする'):W('白天在窝边休息','resting by their den in daytime','ひるはすのそばでやすむ');
+ const bear=st.bear==='hib'?W('在洞穴里冬眠','hibernating in its den','ほらあなでとうみん'):st.bear==='rest'?W('在洞边休息','resting by its den','ほらあなのそばでやすむ'):W('在莓子丛间觅食','foraging among the berry bushes','ベリーのあいだでたべものさがし');
+ const boar=st.boar==='rest'?W('在窝里睡觉','sleeping in its wallow','すでねむる'):W('在林子里拱地，会冲撞','rooting in the woods, charges when startled','もりでじめんをほる、おどろくとつっこむ');
+ const shark=st.shark==='away'?W('去深海过冬了','gone to deep water for winter','ふゆはふかいうみへ'):st.shark==='deep'?W('潜在深水里','diving deep','ふかくにもぐっている'):W('鱼鳍在远海打转','fin circling far offshore','ひれがおきあいをまわる');
+ const eel=st.eel==='hid'?W('缩在岩缝里','tucked in its rock hole','いわあなにひそんでいる'):W('从海底岩洞探出头','peeking out of the seabed rocks','うみのいわあなからかおをだす');
+ return {wolf,bear,boar,shark,eel}}
+function bstCalLine(){const i=bstInfo(),B=bs();return '🐺 '+TT('凶兽','Fierce beasts','きょうぼうなどうぶつ')+'：'+n2('wolf',i)+' · '+n2('bear',i)+' · '+n2('boar',i)+' · '+n2('shark',i)+' · '+n2('eel',i)+(Math.max(0,...Object.values(B.fear))>.2?' · 😨 '+TT('他还有点怕','he is still wary','まだこわがっている'):'')}
+const n2=(k,i)=>bnm(k)+' '+i[k];
+const _calH_b=calHTML;calHTML=function(){let h=_calH_b();try{h=h.replace('<div class="cinfo">','<div class="cinfo">'+bstCalLine()+'<br>')}catch(e){}return h};
+Object.assign(EVG,{beast:'🐺',nightmare:'🌙'});
+function bstRowHTML(){const B=bs(),i=bstInfo(),inD=PET.x<-20&&PET.fl===0||BST.chase;const bt=[];
+ if(inD)bt.push(`<button data-bs="home">${bBtn.home()}</button>`);
+ bt.push(B.rules.trail?`<span>✅ ${TT('只走小路','Stays on trails','みちからはずれない')}</span>`:`<button data-bs="trail">${bBtn.trail()}</button>`);
+ bt.push(B.rules.night?`<span>✅ ${TT('夜里不去深林','No deep woods at night','よるはいかない')}</span>`:`<button data-bs="night">${bBtn.night()}</button>`);
+ if(B.needC)bt.push(`<button data-bs="comfort">${bBtn.comfort()}</button>`);
+ return `<div class="rr"><b>🐺 ${TT('深林与海里的凶兽','Fierce beasts','けもの')}</b><span class="chips">${bt.join('')}</span><small>${bnm('wolf')}：${i.wolf}；${bnm('bear')}：${i.bear}；${bnm('boar')}：${i.boar}；${bnm('shark')}：${i.shark}；${bnm('eel')}：${i.eel}</small></div>`}
+const _lph_b=lifePanelHTML;lifePanelHTML=function(){const h=_lph_b();try{const row=bstRowHTML(),i=h.indexOf('id="gdu"');if(i<0)return h+row;const j=h.lastIndexOf('<div class="rr">',i);return h.slice(0,j)+row+h.slice(j)}catch(e){return h}};
+const _lb_b=lifeBind;lifeBind=function(){_lb_b();document.querySelectorAll('[data-bs]').forEach(b=>b.onclick=()=>{const a=b.dataset.bs;if(a==='home')bstCallHome();else if(a==='comfort'){try{psyComfort('hug')}catch(e){}bstComforted()}else bstTeach(a);setTimeout(()=>{try{refreshDock()}catch(e){}},300)})};
+/* ---------- chat ---------- */
+const BRE=/狼|熊(?!猫)|野猪|獠牙|鲨|海鳝|鳗|凶兽|猛兽|危险的?动物|wolf|wolves|\bbears?\b(?!\s+with)|\bboars?\b|\bshark|\bmoray|\beels?\b|\bbeasts?\b|dangerous animal|fierce|おおかみ|オオカミ|くま|クマ|いのしし|イノシシ|サメ|さめ|ウツボ|うつぼ|こわいどうぶつ|もうじゅう/i;
+const BRE_TR=/待在小路|走小路|只走小路|别离开小路|别乱走|不要乱走|stay on (the )?(trail|path)|stick to the (trail|path)|みちからはずれ|こみちだけ|みちをあるいて/i;
+const BRE_NT=/晚上.{0,6}(别|不要|不许|不能).{0,4}(去|进).{0,4}(森林|树林|深林)|(don'?t|do not|never) go .{0,16}(woods|forest).{0,12}(night|dark)|(night|dark).{0,16}(don'?t|do not|never).{0,10}(woods|forest)|よる.{0,6}(もり|おくのもり).{0,6}(いかない|いっちゃだめ|いかないで)/i;
+const BRE_HM=/快回家|回家吧|回来吧|赶紧回来|come (back )?home|get back home|come back now|はやくかえって|かえっておいで|もどっておいで/i;
+function bstKind(raw){const t=raw.toLowerCase();if(/狼|wolf|wolves|おおかみ|オオカミ/.test(t))return'wolf';if(/熊|\bbears?\b|くま|クマ/.test(t))return'bear';if(/野猪|獠牙|\bboars?\b|いのしし|イノシシ/.test(t))return'boar';if(/鲨|shark|サメ|さめ/.test(t))return'shark';if(/海鳝|鳗|moray|\beels?\b|ウツボ|うつぼ/.test(t))return'eel';return null}
+function bstAnswer(raw){const k=bstKind(raw),B=bs(),st=bstStates(),i=bstInfo(),L=LI();const afraid=/怕|害怕|恐|scared|afraid|fear|こわ/i.test(raw),where=/住|哪里|在哪|where|live|どこ|すんで/i.test(raw),harm=/咬|攻击|伤|危险|吃人|bite|attack|hurt|dangerous|あぶな|かむ|おそう/i.test(raw),near=/来|靠近|房子|house|near|come|くる|ちかく/i.test(raw),hib=/冬眠|冬天|hibernat|winter|とうみん|ふゆ/i.test(raw);
+ const f=B.fear[k]||0,tr=S.P.trait;let s='',emo='neutral';
+ const A={
+ wolf:[['狼住在深林更里面的地方，白天在窝边睡觉，天黑了才出来走动。晚上我会听到它们嚎叫。','Wolves live far inside the deep woods. They sleep by their den in the day and walk around when it gets dark. At night I hear them howl.','おおかみはおくのもりのいちばんおくにいて、ひるはすのそばでねて、くらくなるとあるきまわる。よるはとおぼえがきこえる。'],
+  ['它们不会来我们的小屋、码头和海滩的，只守着自己的林子。我只要不进深林就没事，尤其天黑以后。','They do not come to our house, dock or beach. They keep to their own woods. I am fine as long as I stay out of the deep woods, especially after dark.','おうちやふとう、はまべにはこない。じぶんたちのもりにいるだけ。くらくなったらおくのもりにいかなければだいじょうぶ。']],
+ bear:[['熊住在深林的洞里，夏天秋天会去莓子丛吃莓子，冬天就在洞里睡觉。','The bear lives in a den in the deep woods. In summer and autumn it visits the berry bushes, and in winter it sleeps in its den.','くまはおくのもりのほらあなにすんでいて、なつとあきはベリーをたべにくる。ふゆはほらあなでねむる。'],
+  ['它很大，一站起来吼就吓人，可是它主要想吃莓子。别靠近它，慢慢退开就好。','It is huge and scary when it stands up and roars, but mostly it wants berries. Do not go close — just back away slowly.','おおきくて、たちあがってほえるとこわいけど、ベリーがたべたいだけ。ちかよらないで、ゆっくりさがればいい。']],
+ boar:[['野猪有长长的獠牙，喜欢在林子里拱地找吃的。','The wild boar has long tusks and loves rooting around in the woods for food.','いのししはながいきばがあって、もりでじめんをほってたべものをさがす。'],
+  ['你要是吓到它，它会低着头冲过来！我就被它追过……所以要在小路上走，别乱闯它的地盘。','If you startle it, it charges with its head down! Please stay on the trails and keep out of its patch.','おどろかせるとあたまをさげてつっこんでくる！こみちをあるいて、なわばりにはいらないようにね。']],
+ shark:[['鲨鱼的背鳍在远远的海面打转，有时候会潜到深水里。','A shark’s fin circles far out on the water, and sometimes it dives into deep water.','サメのひれがとおくのうみをまわって、ときどきふかいところにもぐる。'],
+  ['它不会游到码头和海滩这边来，可是我钓鱼的时候看到鱼鳍还是会往后退。冬天它去深海了。','It never comes to the dock or beach, but when I see the fin while fishing I still step back. In winter it goes to deep water.','ふとうやはまべにはこないけど、つりのときにひれがみえるとやっぱりさがる。ふゆはふかいうみにいく。']],
+ eel:[['海鳝住在海底的岩石洞里，会把头探出来，嘴一张一合的。','The moray eel lives in a rock hole on the seabed and pokes its head out, opening and closing its mouth.','ウツボはうみのそこのいわあなにすんでいて、かおをだして、くちをぱくぱくする。'],
+  ['它守着自己的石洞，不会到岸边来。看起来凶，其实只是在呼吸。','It guards its own rock hole and never comes near the shore. It looks fierce, but it is just breathing.','じぶんのいわあなをまもっていて、きしにはこない。こわそうだけど、いきをしているだけ。']]};
+ if(!k){s=TT('凶兽有：深林里的狼群、熊和野猪，大海里的鲨鱼和海鳝。它们各守各的地盘，不会来小屋、码头和海滩。','The fierce ones: wolves, a bear and a wild boar in the deep woods, a shark and a moray eel in the sea. Each keeps to its own territory, none come to the house, dock or beach.','きょうぼうなのは、おくのもりのおおかみ・くま・いのしし、うみのサメとウツボ。それぞれのなわばりにいて、おうちやふとう、はまべにはこない。')+' '+TT('我会躲开它们。','I stay away from them.','ぼくはさけてるよ。');if(Math.max(0,...Object.values(B.fear))>.3){emo='fear'}return{s,emo}}
+ const a=A[k];s=a[0][L];
+ if(k==='bear'&&hib)s=st.bear==='hib'?TT('熊冬天要在洞里睡觉，现在它正睡着呢，要到春天才醒。','The bear sleeps in its den all winter. It is asleep right now and will wake in spring.','くまはふゆのあいだほらあなでねむる。いまはねていて、はるまでおきない。'):TT('熊冬天会冬眠，现在它还醒着，在吃莓子攒力气。','Bears hibernate in winter. It is still awake now, eating berries to store up energy.','くまはふゆにとうみんする。いまはまだおきていて、ベリーをたべてちからをたくわえている。');
+ else if(k==='bear'&&st.bear==='hib')s+=' '+TT('现在是它的冬眠期，它正睡着。','It is hibernating right now.','いまはとうみんちゅうでねている。');
+ if(k==='wolf'&&st.wolf==='roam')s+=' '+TT('现在天色暗了，它们正在林子里转悠。','It is dark now, so they are out roaming the woods.','いまはくらいから、もりをうろついている。');
+ if(k==='shark'&&st.shark==='away')s+=' '+TT('现在是冬天，它去深海了。','It is winter, so it has gone to deep water.','いまはふゆだから、ふかいうみにいっている。');
+ if(where||near||harm)s=(where?a[0][L]:'')+' '+a[1][L];
+ else if(afraid)s=(f>.25?TT('嗯……我真的有点怕，上次的事我还记得。','Yes… I am really a bit scared. I remember what happened last time.','うん…ほんとうにすこしこわい。このまえのこと、おぼえてる。'):TT('有一点点怕，所以我会离它们远远的。','A tiny bit, so I keep far away from them.','ちょっとだけこわいから、とおくにいるようにしてる。'))+' '+a[1][L];
+ if(tr==='傲娇'&&afraid)s=TT('才没有怕呢！只是……不想靠近而已。','I am not scared! I just… do not want to go near.','こわくないし！ただ…ちかづきたくないだけ。');
+ if(f>.5||(afraid&&f>.25))emo='fear';return{s:s.trim(),emo}}
+const _cuP_b=cuPlan;cuPlan=function(raw,opt){const p=_cuP_b(raw,opt);try{if(!raw)return p;const B=bs();
+ if(BRE_TR.test(raw)&&!(p.ent&&p.ent.food&&p.ent.food.length)){const had=B.rules.trail;return Object.assign({},p,{intent:'beast',s:had?TT('嗯，我记得只走小路。','Yes, I remember to stay on the trails.','うん、みちからはずれないよ。'):TT('好，我只走小路，不乱闯。','Okay, I will stay on the trails and not wander off.','わかった、こみちだけあるくよ。'),emo:'happy',act:()=>bstTeach('trail'),reason:'beast'})}
+ if(BRE_NT.test(raw)){const had=B.rules.night;return Object.assign({},p,{intent:'beast',s:had?TT('嗯，晚上我不去深林。','Yes, I do not go to the deep woods at night.','うん、よるはおくのもりにいかない。'):TT('好，天黑以后我不去深林。','Okay, after dark I will not go to the deep woods.','わかった、くらくなったらおくのもりにはいかない。'),emo:'happy',act:()=>bstTeach('night'),reason:'beast'})}
+ if(BRE_HM.test(raw)&&(PET.x<-20||BST.chase)){return Object.assign({},p,{intent:'beast',s:TT('好！我马上回来！','Okay! I am coming home right now!','うん！いますぐかえる！'),emo:'excited',act:()=>bstCallHome(),reason:'beast'})}
+ if(BRE.test(raw)&&!/(采|forag|basket|mushroom|蘑菇)/i.test(raw)){const a=bstAnswer(raw);return Object.assign({},p,{intent:'beast',s:a.s,emo:a.emo,act:null,reason:'beast'})}}catch(e){}return p};
+const _aT_b=actText;actText=function(){try{if(BST.chase)return TT('我在跑！有'+bnm(BST.chase.k)+'追我！','I am running! A '+bnm(BST.chase.k)+' is after me!','はしってる！'+bnm(BST.chase.k)+'がおいかけてくる！');const B=bs();if(B.needC)return TT('我还有点怕……能陪陪我吗？','I am still a bit scared… can you stay with me?','まだすこしこわい…そばにいてくれる？')}catch(e){}return _aT_b()};
+const BSTAPI={bs,BST,bstStates,bstPresent,bstInfo,bzIn,bzClamp,BZX,BDEN,BWP,bstEncounter,bstRoll,bstTick,bstUpdate,bstInit,bstHome,bstHowl,bstTeach,bstComforted,bstCallHome,bstNightmare,bstAnswer,bstTrailDist,bstScareGain,bstSteal,bstCalLine,bstRowHTML,bstChaseTick};window.BSTAPI=BSTAPI;
+
 /* ===== diary & monthly assessment (diary text per language; report UI stays Chinese) ===== */
 const WEATHER_IC=['☀️','⛅','🌧️','☀️','🍃'];
 function uniq(a){return [...new Set(a)]}
@@ -3638,7 +4049,7 @@ function composeDiary(k,L,A,c){const P=S.P,tr=P.trait,D=LG().DI;const parts=[];c
  if(L.sleep>60)parts.push(hasBed()?D.bed:D.noBedS);
  const emo=Object.entries(L.emo).filter(e=>e[0]!=='sleep').sort((a,b)=>b[1]-a[1])[0];if(emo){parts.push(fmt(D.emo,{e:D.EMOW[emo[0]]||D.EMOW.neutral}));const dl=D.EMOD[emo[0]];if(dl)parts.push(dl[Math.floor(hashN(k+7)*dl.length)])}
  parts.push(A.mood<38?D.closeBad[tr]:D.close[tr]);
- const text=parts.concat(L.evs||[]).join(D.glue).replace(/\s{2,}/g,' ').replace(/ ,/g,',').trim();
+ const cl=parts.pop();const text=parts.concat(L.evs||[],[cl]).join(D.glue).replace(/\s{2,}/g,' ').replace(/ ,/g,',').trim();
  return{text,wk:wk+' '+WEATHER_IC[wi],emo:emo?emo[0]:'neutral',sea}}
 function finalizeDay(k,c){const L=S.log;const A=dayAvg(L);const away=!L.touched;L.away=away;
  const d=composeDiary(k,L,A,c);const pl=Object.values(L.playt||{}).reduce((a,b)=>a+b,0),pt=Object.values(L.pett||{}).reduce((a,b)=>a+b,0);
@@ -3913,7 +4324,7 @@ function frame(){requestAnimationFrame(frame);const now=performance.now();const 
   const nw=nowS();if(nw>nextChat&&!S.temp&&!modal.classList.contains('show')){nextChat=nw+22+Math.random()*22;idleTalk()}
   if(nw>thT&&!S.temp){thT=nw+170+Math.random()*200;if(Math.random()<.6)thunder()}
   if(bubT&&nw>bubT){bub.classList.remove('show');bubT=0}
-  if(bubT){const p=headScreen(1.35);bub.style.left=clamp(p.x,130,innerWidth-130)+'px';bub.style.top=Math.max(60,p.y)+'px'}
+  if(bubT){const p=headScreen(1.1);bub.style.left=clamp(p.x,130,innerWidth-130)+'px';bub.style.top=Math.max(60,p.y)+'px'}
   cam.k=lerp(cam.k,cam.mode==='room'?1:0,Math.min(1,dt*3.2));camKeysTick(dt);if(window._zl!==(S.lang||'zh')){window._zl=S.lang||'zh';buildZoneBar()}{const zb=document.getElementById('zones');if(zb)zb.style.opacity=cam.k>.12?'0':'1',zb.style.pointerEvents=cam.k>.12?'none':'auto'}
   {const bd=document.getElementById('brand');if(bd)bd.style.opacity=cam.k>.12?'0':'1'}
   cam.offY=lerp(cam.offY,dock.classList.contains('show')?(dock.offsetHeight+80)*.4:0,.12);
@@ -3929,7 +4340,7 @@ function boot(){resize();setupPointer();
  setTimeout(()=>{if(S.sleeping)return;if(el>1800){say(tail('away')+toneTail())}else say(greetLine());
   if(S.unread)toast('📋 有新的月度心理评估报告，点右侧「评估」查看');else if(S.unreadD)toast('📖 有新的日记可以看啦')},800)}
 /* test hooks */
-window.__th={FG:FGAPI,vst,vpush,valScan,valStyle,valReportText,cultFest,cultInit,valTick,CULT,petCare,pkComfort,traceTick,buildGraves,childDie,lossScene,archiveAndRestart,pkAnswer,pkState,traceFound,traceSync,petDie,petStage,petLifeTick,rpStage,rpLifeTick,rpCare,rpDie,CR,lifeNeglectTick,ngState,noteSelfSave,exoAdopt,exoFind,exoDecide,exoRelease,exoPanelHTML,exoState,EXO,wildPresent,wildList,wildTable,SPECIES,lf,lifeMeters,lifePromise,lifeKept,lifeGround,lifeWoodsRoll,lifeWoodsHelp,lifeSlip,lifeRescue,lifeAskQ,lifeAnswer,lifeVisit,lifeSpace,lifeAct,lifeFishWith,weatherNow,logEv,outdoorOK,lifeAlert,cuPlan,cuParse,chatTurn,llmCfg,llmSave,llmOn,get CU(){return CU},psyScold,psyHit,psyComfort,psyMisb,psyExplain,psyInit,psyTick,psyPanelHTML,psyAttStyle,get psy(){return S.psy},evoke,say,hold,setEmo,get S(){return S},PET,CR,cam,ENV,feed,lessonDo,setOutfitSel,setHatSel,setAccSel,setDecorSel,rotateDecor,chatSend,poke,thunder,toggleLight,setTab,showCard,showDiary,showReport,adoptPet,feedPet,addPlay,removePlay,startPlay,startPetting,petById,setZoom,initWorld,
+window.__th={BST:window.BSTAPI,FG:FGAPI,vst,vpush,valScan,valStyle,valReportText,cultFest,cultInit,valTick,CULT,petCare,pkComfort,traceTick,buildGraves,childDie,lossScene,archiveAndRestart,pkAnswer,pkState,traceFound,traceSync,petDie,petStage,petLifeTick,rpStage,rpLifeTick,rpCare,rpDie,CR,lifeNeglectTick,ngState,noteSelfSave,exoAdopt,exoFind,exoDecide,exoRelease,exoPanelHTML,exoState,EXO,wildPresent,wildList,wildTable,SPECIES,lf,lifeMeters,lifePromise,lifeKept,lifeGround,lifeWoodsRoll,lifeWoodsHelp,lifeSlip,lifeRescue,lifeAskQ,lifeAnswer,lifeVisit,lifeSpace,lifeAct,lifeFishWith,weatherNow,logEv,outdoorOK,lifeAlert,cuPlan,cuParse,chatTurn,llmCfg,llmSave,llmOn,get CU(){return CU},psyScold,psyHit,psyComfort,psyMisb,psyExplain,psyInit,psyTick,psyPanelHTML,psyAttStyle,get psy(){return S.psy},evoke,say,hold,setEmo,get S(){return S},PET,CR,cam,ENV,feed,lessonDo,setOutfitSel,setHatSel,setAccSel,setDecorSel,rotateDecor,chatSend,poke,thunder,toggleLight,setTab,showCard,showDiary,showReport,adoptPet,feedPet,addPlay,removePlay,startPlay,startPetting,petById,setZoom,initWorld,
  setHour(h){const w=wsec();const t=Math.floor(w/86400)*86400+h*3600;S.birth+=(w-t)/TS*1000},
  setMonth(n){const w=wsec(),d=Math.floor(w/86400),nd=n*30+(d%30),nw=nd*86400+(w%86400);S.birth+=(w-nw)/TS*1000;S.logDay=logIdx(nw);S.repMonth=n;S.tc={c:0,h:0}},
  skip(sec){S.birth-=sec*1000;S.last=Date.now()-sec*1000;catchUp()},wake(){wakeUp('natural')},sleepNow(){goSleep()},emo(e,s){evoke(e,s||6)},
